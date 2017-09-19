@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>98AEF434-60EC-4A21-9B85-5CFB4B8A1B8D</string>
+	<key>IDESourceControlProjectName</key>
+	<string>FaceDetectionTest</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>37526DA425E5430474A14FBFA1BC4525160B5FC1</key>
+		<string>https://github.com/kylemcdonald/ofxCv.git</string>
+		<key>E32410CFFA0A8E0FEAEE8DF64058B6F7E7A3C0A8</key>
+		<string>https://bitbucket.org/10K/facetracking.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>ofxCVFaceExample/FaceDetectionTest.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>37526DA425E5430474A14FBFA1BC4525160B5FC1</key>
+		<string>../../../../../addons/ofxCv</string>
+		<key>E32410CFFA0A8E0FEAEE8DF64058B6F7E7A3C0A8</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://bitbucket.org/10K/facetracking.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>E32410CFFA0A8E0FEAEE8DF64058B6F7E7A3C0A8</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>E32410CFFA0A8E0FEAEE8DF64058B6F7E7A3C0A8</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Megane</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>37526DA425E5430474A14FBFA1BC4525160B5FC1</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ofxCv</string>
+		</dict>
+	</array>
+</dict>
+</plist>

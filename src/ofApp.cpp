@@ -1,0 +1,1063 @@
+#include "ofApp.h"
+
+
+
+//--------------------------------------------------------------
+void ofApp::setup() {
+	ofSetVerticalSync(true);
+	ofSetFrameRate(60);
+	
+	cam.setVerbose(true);
+	std::vector<ofVideoDevice> cams =  cam.listDevices();
+	cout << endl << endl << "Video Devices: " << endl;
+	for(int i = 0; i < cams.size(); i++){
+		cout << "cam " << i << " " << cams[i].deviceName << endl;
+		cout << "\t	id : " << cams[i].id << endl;
+		cout << "\t hardware : " << cams[i].hardwareName << endl;
+		std::vector <ofVideoFormat> formats = cams[i].formats;
+		for(int f = 0; f < formats.size(); f++){
+			cout << "\t" << formats[f].width << "x" << formats[f].height << " : " << formats[f].pixelFormat << endl;
+		}
+	}
+	cout << endl;
+	cam.setDeviceID(0);
+	cam.initGrabber( 1280, 720);
+	
+	//	1280 x 960	//	640 x 480	//	320 x 240
+	//  1280 x 720	//  640 x 360	//	320 x 180
+	//	1920 x 1080	//	960 x 540	//	480 x 270
+	
+	fps = 0;
+	
+	setupFaceTriangles();
+	setupFaceTexturePoints();
+	faceTexture.load("facePattern1.png");
+	
+	selPt = NULL;
+	
+	// DLIB
+	// deserialize(ofToDataPath("standard_face_detector.svm")) >> detector;
+	//cout << "Loaded detector " << detector.
+	detector = get_frontal_face_detector();
+	bScaleUp = false;
+	bUseDLib = false;
+	
+	// LANDMARKS
+	deserialize(ofToDataPath("shape_predictor_68_face_landmarks.dat")) >> sp;
+	
+	drawState = DRAW_POINTS;
+	setupButtons();
+	setupUVC();
+	
+}
+
+//--------------------------------------------------------------
+void ofApp::update() {
+	updateButtons();
+	
+	cam.update();
+	if(cam.isFrameNew() && bUseDLib) {
+		
+		setDLibImageFromPixels(dImg,
+							   cam.getPixels(),
+							   cam.getWidth(),
+							   cam.getHeight(),
+							   OF_IMAGE_COLOR);
+		
+		
+		// Make the image bigger by a factor of two.  This is useful since
+		// the face detector looks for faces that are about 80 by 80 pixels
+		// or larger.  Therefore, if you want to find faces that are smaller
+		// than that then you need to upsample the image as we do here by
+		// calling pyramid_up().  So this will allow it to detect faces that
+		// are at least 40 by 40 pixels in size.  We could call pyramid_up()
+		// again to find even smaller faces, but note that every time we
+		// upsample the image we make the detector run slower since it must
+		// process a larger image.
+		if(bScaleUp){
+			pyramid_up(dImg);
+		}
+		
+		
+		// Now tell the face detector to give us a list of bounding boxes
+		// around all the faces it can find in the image.
+		dets = detector(dImg);
+		
+		// cout << "Number of faces detected: " << dets.size() << endl;
+		
+		shapes.clear();
+		for (unsigned long j = 0; j < dets.size(); ++j)
+		{
+			full_object_detection shape = sp(dImg, dets[j]);
+			// cout << "number of parts: "<< shape.num_parts() << endl;
+			// cout << "pixel position of first part:  " << shape.part(0) << endl;
+			// cout << "pixel position of second part: " << shape.part(1) << endl;
+			// You get the idea, you can get all the face part locations if
+			// you want them.  Here we just store them in shapes so we can
+			// put them on the screen.
+			shapes.push_back(shape);
+		}
+		
+	}
+	fps += (ofGetFrameRate() - fps)/10;
+}
+
+
+//MARK: - DRAWING
+
+//--------------------------------------------------------------
+void ofApp::draw() {
+	ofSetColor(255);
+	if(drawState == EDIT_POINTS){
+		drawTexturePoints();
+	}else{
+		ofPushMatrix();
+		{
+			if(cam.getWidth() > ofGetWidth()){
+				// scale down
+				ofScale(.5, .5);
+			}
+			cam.draw(0, 0);
+			
+			
+			ofPushMatrix();
+			{
+				if(bScaleUp){
+					ofScale(.5, .5);
+				}
+				/*
+				 ofSetColor(255, 0, 0);
+				 ofSetLineWidth(2);
+				 ofNoFill();
+				 for(int i = 0; i < dets.size(); i++){
+				 ofDrawRectangle( dets[i].left(),
+				 dets[i].top(),
+				 dets[i].width(),
+				 dets[i].height());
+				 }
+				 */
+				
+				switch(drawState){
+					case DRAW_POINTS:
+					{
+						ofSetColor(0, 0, 100);
+						ofNoFill();
+						ofSetLineWidth(1);
+						drawFacePoints();
+					}
+						break;
+					case DRAW_CONNECTIONS:
+					{
+						ofSetColor(0, 0, 100);
+						ofNoFill();
+						ofSetLineWidth(1);
+						drawFacePoints();
+						drawTriangles();
+					}
+						break;
+					case DRAW_TRIANGLES:
+					{
+						ofFill();
+						drawTriangles();
+					}
+						break;
+					case DRAW_TEXTURED:
+					{
+						drawTextured();
+					}
+						break;
+				}
+				
+			}
+			ofPopMatrix();
+			ofSetLineWidth(1);
+			ofDrawBitmapStringHighlight(ofToString(fps, 0)+"fps", 10, 40);
+		}
+		ofPopMatrix();
+	}
+}
+
+//--------------------------------------------------------------
+void ofApp::drawFacePoints(){
+	
+	for(int i = 0; i < shapes.size(); i++){
+		full_object_detection shape = shapes[i];
+		dlib::rectangle rect = shape.get_rect();
+		ofDrawRectangle(rect.left(), rect.top(), rect.width(), rect.height());
+		
+		for(int j = 0; j < shape.num_parts(); j++){
+			ofDrawRectangle(shape.part(j).x(), shape.part(j).y(), 2, 2);
+			ofDrawBitmapString(ofToString(j,0), shape.part(j).x(), shape.part(j).y());
+		}
+		
+		if(shape.num_parts() < 68){
+			continue;
+		}
+		
+		/*
+		 // ALL POINTS
+		 for(int j = 0; j < 68; j++){
+		 ofDrawEllipse(shape.part(j).x(), shape.part(j).y(), 3, 3);
+		 }
+		 */
+		
+		// JAW
+		for(int j = 0; j < 16; j++){
+			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		}
+		// Left eyebrow
+		for(int j = 17; j < 21; j++){
+			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		}
+		// Left Eye
+		ofDrawEllipse(	(shape.part(36).x() + shape.part(39).x())/2,
+					  (shape.part(36).y() + shape.part(39).y())/2,
+					  5,5);
+		for(int j = 36; j < 41; j++){
+			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		}
+		ofDrawLine(shape.part(41).x(), shape.part(41).y(),  shape.part(36).x(), shape.part(36).y());
+		
+		// Right Eyebrow
+		for(int j = 22; j < 26; j++){
+			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		}
+		
+		// Right Eye
+		ofDrawEllipse(	(shape.part(42).x() + shape.part(45).x())/2,
+					  (shape.part(42).y() + shape.part(45).y())/2,
+					  5,5);
+		for(int j = 42; j < 47; j++){
+			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		}
+		ofDrawLine(shape.part(47).x(), shape.part(47).y(),  shape.part(42).x(), shape.part(42).y());
+		
+		// Nose
+		for(int j = 27; j < 30; j++){
+			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		}
+		for(int j = 31; j < 35; j++){
+			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		}
+		
+		
+		// Mouth
+		for(int j = 48; j < 59; j++){
+			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		}
+		// reconnect
+		ofDrawLine(shape.part(59).x(), shape.part(59).y(),  shape.part(48).x(), shape.part(48).y());
+		
+		
+		// bottom of mouth
+		ofSetColor(255,100,0);
+		for(int j = 60; j < 67; j++){
+			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		}
+		ofDrawLine(shape.part(67).x(), shape.part(67).y(),  shape.part(60).x(), shape.part(60).y());
+		
+	}
+}
+
+//--------------------------------------------------------------
+void ofApp::drawTriangles(){
+	
+	int ntris = triangles.size();
+	int a, b, c;
+	ofPoint ca, cb, cc; // colors
+	std::vector < ofPoint > colors = {
+		ofPoint(1, 0, 0),
+		ofPoint(1, 0.5, 0),
+		ofPoint(1, 1, 0),
+		ofPoint(0.5, 1, 0),
+		ofPoint(0, 1, 0),
+		ofPoint(0, 1, 0.5),
+		ofPoint(0, 1, 1),
+		ofPoint(0, 0.5, 1),
+		ofPoint(0, 0, 1),
+		ofPoint(0.5, 0, 1),
+		ofPoint(1, 0, 1),
+		ofPoint(1, 0, 0.5),
+	};
+	
+	glBegin(GL_TRIANGLES);
+	for(int i = 0; i < shapes.size(); i++){
+		full_object_detection shape = shapes[i];
+		if(shape.num_parts() < 68){
+			continue;
+		}
+		
+		for(int t = 0; t < ntris; t ++){
+			a = triangles[t][0];
+			b = triangles[t][1];
+			c = triangles[t][2];
+			ca = colors[a % colors.size()];
+			cb = colors[b % colors.size()];
+			cc = colors[c % colors.size()];
+			
+			glColor3f(ca.x, ca.y, ca.z);
+			glVertex2f(shape.part(a).x(), shape.part(a).y() );
+			glColor3f(cb.x, cb.y, cb.z);
+			glVertex2f(shape.part(b).x(), shape.part(b).y() );
+			glColor3f(cc.x, cc.y, cc.z);
+			glVertex2f(shape.part(c).x(), shape.part(c).y() );
+			
+			
+		}
+		
+	}
+	glEnd();
+}
+
+//--------------------------------------------------------------
+void ofApp::drawTextured(){
+	
+	ofTexture  * tex = &(faceTexture.getTexture());
+	
+	float w = faceTexture.getWidth();
+	float h = faceTexture.getHeight();
+	float tx = w/2;
+	float ty = h/2;
+	
+	ofFill();
+	glEnable(tex->texData.textureTarget);
+	glBindTexture(tex->texData.textureTarget, (GLuint)tex->texData.textureID );
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_TRIANGLES);
+	int ntris = triangles.size();
+	int a, b, c;
+	
+	for(int i = 0; i < shapes.size(); i++){
+		full_object_detection shape = shapes[i];
+		if(shape.num_parts() < 68){
+			continue;
+		}
+		
+		for(int t = 0; t < ntris; t ++){
+			a = triangles[t][0];
+			b = triangles[t][1];
+			c = triangles[t][2];
+			
+			glTexCoord2f(tx + w * texPts[a]->x, ty + h * texPts[a]->y);
+			glVertex2f(shape.part(a).x(), shape.part(a).y() );
+			
+			glTexCoord2f(tx + w * texPts[b]->x, ty + h * texPts[b]->y);
+			glVertex2f(shape.part(b).x(), shape.part(b).y() );
+			
+			glTexCoord2f(tx + w * texPts[c]->x, ty + h * texPts[c]->y);
+			glVertex2f(shape.part(c).x(), shape.part(c).y() );
+		}
+	}
+	
+	glEnd();
+	glDisable(tex->texData.textureTarget);
+	
+}
+
+//MARK: -
+
+//--------------------------------------------------------------
+void ofApp::setupFaceTriangles(){
+	
+	triangles = {
+		
+		// left cheek
+		{ 0, 1, 36},
+		{ 1, 2, 36},
+		{ 36, 2, 41},
+		{ 2, 3, 41},
+		{ 40, 41, 3},
+		{ 3, 31, 40},
+		{ 40, 30, 29},
+		{ 40, 31, 30},
+		
+		// cheek to nose
+		{ 31, 3, 48},
+		{ 3, 4, 48},
+		{ 4, 5, 48},
+		
+		// right cheek
+		{ 16, 45, 15},
+		{ 15, 45, 14},
+		{ 45, 46, 14},
+		{ 47, 29, 30},
+		{ 47, 30, 35},
+		{ 47, 35, 46},
+		{ 46, 35, 14},
+		{ 35, 13, 14},
+		
+		{ 35, 54, 13 },
+		{ 54, 12, 13},
+		{ 54, 11, 12 },
+		
+		
+		// eyebrows nose
+		{21, 27, 22},
+		
+		// left eyebrow
+		{ 17, 36, 18},
+		{ 18, 36, 37},
+		{ 18, 37, 19},
+		{ 19, 37, 20},
+		{ 20, 37, 38},
+		{ 20, 38, 21},
+		{ 21, 38, 39},
+		{ 21, 39, 27},
+		
+		// left eye nose
+		{ 39, 28, 27},
+		{ 39, 29, 28},
+		{ 40, 29, 39},
+		
+		
+		// right eyebrow
+		{ 26, 25, 45},
+		{ 25, 44, 45},
+		{ 25, 24, 44},
+		{ 24, 43, 44},
+		{ 24, 23, 43},
+		{ 23, 42, 43},
+		{ 23, 22, 42},
+		{ 22, 27, 42},
+		
+		// right eye nose
+		{ 27, 28, 42},
+		{ 42, 28, 29},
+		{ 42, 29, 47},
+		
+		// NOSE
+		{ 30, 31, 32},
+		{ 30, 32, 33},
+		{ 30, 33, 34},
+		{ 30, 34, 35},
+		
+		// nose - mouth (from center - left)
+		{ 33, 50, 51},
+		{ 33, 32, 50},
+		{ 32, 31, 50},
+		{ 31, 49, 50},
+		{ 31, 48, 49},
+		
+		// nose - mouth (from center - right)
+		{ 33, 51, 52},
+		{ 33, 52, 34},
+		{ 34, 52, 35},
+		{ 35, 52, 53},
+		{ 35, 53, 54},
+		
+		// Mouth top left
+		{ 51, 50, 62},
+		{ 50, 61, 62},
+		{ 50, 49, 61},
+		{ 49, 60, 61},
+		{ 49, 48, 60},
+		// Mouth top right
+		{ 51, 62, 52},
+		{ 52, 62, 63},
+		{ 52, 63, 53},
+		{ 53, 63, 64},
+		{ 53, 64, 54},
+		// Mouth bottom left
+		{ 66, 58, 57},
+		{ 66, 67, 58},
+		{ 67, 59, 58},
+		{ 67, 60, 59},
+		{ 60, 48, 59},
+		// Mouth bottom right
+		{ 66, 57, 56},
+		{ 66, 56, 65},
+		{ 65, 56, 55},
+		{ 65, 55, 64},
+		{ 64, 55, 54},
+		
+		// Mouth - chin
+		{ 5, 6, 48},
+		{ 48, 6, 59},
+		{ 59, 6, 7},
+		{ 59, 7, 58},
+		{ 58, 7, 57},
+		{ 57, 7, 8},
+		{ 57, 8, 9},
+		{ 57, 9, 56},
+		{ 56, 9, 55},
+		{ 55, 9, 10},
+		{ 55, 10, 54},
+		{ 54, 10, 11},
+		
+	};
+}
+
+//--------------------------------------------------------------
+void ofApp::setupFaceTexturePoints(){
+ texPts = {
+	 // width = 373, height = 374
+	 new ofPoint(-0.5000, -0.2888 ), // 0
+	 new ofPoint(-0.4893, -0.1524 ), // 1
+	 new ofPoint(-0.4705, -0.0160 ), // 2
+	 new ofPoint(-0.4383, 0.1176 ), // 3
+	 new ofPoint(-0.3954, 0.2433 ), // 4
+	 new ofPoint(-0.3231, 0.3503 ), // 5
+	 new ofPoint(-0.2265, 0.4278 ), // 6
+	 new ofPoint(-0.1220, 0.4866 ), // 7
+	 new ofPoint(0.0040, 0.5000 ), // 8
+	 new ofPoint(0.1300, 0.4786 ), // 9
+	 new ofPoint(0.2426, 0.4118 ), // 10
+	 new ofPoint(0.3365, 0.3235 ), // 11
+	 new ofPoint(0.3981, 0.2112 ), // 12
+	 new ofPoint(0.4437, 0.0856 ), // 13
+	 new ofPoint(0.4705, -0.0481 ), // 14
+	 new ofPoint(0.4893, -0.1845 ), // 15
+	 new ofPoint(0.5000, -0.3209 ), // 16
+	 new ofPoint(-0.4410, -0.4011 ), // 17
+	 new ofPoint(-0.3794, -0.4759 ), // 18
+	 new ofPoint(-0.2802, -0.4866 ), // 19
+	 new ofPoint(-0.1783, -0.4626 ), // 20
+	 new ofPoint(-0.0925, -0.4171 ), // 21
+	 new ofPoint(0.0469, -0.4305 ), // 22
+	 new ofPoint(0.1354, -0.4786 ), // 23
+	 new ofPoint(0.2373, -0.5000 ), // 24
+	 new ofPoint(0.3365, -0.4840 ), // 25
+	 new ofPoint(0.3981, -0.4198 ), // 26
+	 new ofPoint(-0.0228, -0.3182 ), // 27
+	 new ofPoint(-0.0228, -0.2380 ), // 28
+	 new ofPoint(-0.0228, -0.1631 ), // 29
+	 new ofPoint(-0.0228, -0.0856 ), // 30
+	 new ofPoint(-0.1113, 0.0214 ), // 31
+	 new ofPoint(-0.0657, 0.0294 ), // 32
+	 new ofPoint(-0.0201, 0.0374 ), // 33
+	 new ofPoint(0.0308, 0.0267 ), // 34
+	 new ofPoint(0.0764, 0.0134 ), // 35
+	 new ofPoint(-0.3391, -0.2941 ), // 36
+	 new ofPoint(-0.2828, -0.3316 ), // 37
+	 new ofPoint(-0.2105, -0.3316 ), // 38
+	 new ofPoint(-0.1488, -0.2807 ), // 39
+	 new ofPoint(-0.2105, -0.2647 ), // 40
+	 new ofPoint(-0.2855, -0.2620 ), // 41
+	 new ofPoint(0.1113, -0.2968 ), // 42
+	 new ofPoint(0.1676, -0.3556 ), // 43
+	 new ofPoint(0.2373, -0.3583 ), // 44
+	 new ofPoint(0.2936, -0.3209 ), // 45
+	 new ofPoint(0.2453, -0.2861 ), // 46
+	 new ofPoint(0.1783, -0.2834 ), // 47
+	 new ofPoint(-0.1542, 0.2567 ), // 48
+	 new ofPoint(-0.1059, 0.2005 ), // 49
+	 new ofPoint(-0.0523, 0.1684 ), // 50
+	 new ofPoint(-0.0147, 0.1765 ), // 51
+	 new ofPoint(0.0282, 0.1604 ), // 52
+	 new ofPoint(0.0898, 0.1872 ), // 53
+	 new ofPoint(0.1515, 0.2326 ), // 54
+	 new ofPoint(0.0979, 0.2834 ), // 55
+	 new ofPoint(0.0389, 0.3075 ), // 56
+	 new ofPoint(-0.0067, 0.3128 ), // 57
+	 new ofPoint(-0.0442, 0.3155 ), // 58
+	 new ofPoint(-0.1032, 0.2995 ), // 59
+	 new ofPoint(-0.1220, 0.2513 ), // 60
+	 new ofPoint(-0.0496, 0.2139 ), // 61
+	 new ofPoint(-0.0121, 0.2139 ), // 62
+	 new ofPoint(0.0282, 0.2086 ), // 63
+	 new ofPoint(0.1193, 0.2326 ), // 64
+	 new ofPoint(0.0335, 0.2433 ), // 65
+	 new ofPoint(-0.0094, 0.2487 ), // 66
+	 new ofPoint(-0.0469, 0.2487 ), // 67
+ };
+	
+}
+
+//MARK: - EDIT TEXTURE
+
+
+//--------------------------------------------------------------
+bool ofApp::clickPts(ofPoint p){
+	selPt = NULL;
+	float w = faceTexture.getWidth();
+	float h = faceTexture.getHeight();
+	float mx = ofGetWidth()/2;
+	float my = ofGetHeight()/2;
+	if( w == 0 || h == 0){
+		return;
+	}
+	p -= ofPoint(mx, my);
+	p.x /= w;
+	p.y /= h;
+	float r = 0.01;
+	for(int i = 0; i < texPts.size(); i++){
+		ofPoint * pt = texPts[i];
+		if( p.x > pt->x - r &&  p.x < pt->x + r &&  p.y > pt->y - r &&  p.y < pt->y + r ){
+			selPt = pt;
+			return true;
+		}
+	}
+	return false;
+}
+
+//--------------------------------------------------------------
+bool ofApp::drag(ofPoint p){
+	if(selPt != NULL){
+		
+		float w = faceTexture.getWidth();
+		float h = faceTexture.getHeight();
+		float mx = ofGetWidth()/2;
+		float my = ofGetHeight()/2;
+		if( w == 0 || h == 0){
+			return;
+		}
+		p -= ofPoint(mx, my);
+		p.x /= w;
+		p.y /= h;
+		selPt->set(p);
+		return true;
+	}
+}
+
+//--------------------------------------------------------------
+void ofApp::drawTexturePoints(){
+	// draw texture image
+	float w = faceTexture.getWidth();
+	float h = faceTexture.getHeight();
+	
+	ofPushMatrix();
+	ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
+	ofSetColor(255,255,255);
+	faceTexture.draw(-w/2, -h/2);
+	
+	// draw triangles
+	ofNoFill();
+	int ntris = triangles.size();
+	int a, b, c;
+	ofPoint ca, cb, cc; // colors
+	std::vector < ofPoint > colors = {
+		ofPoint(1, 0, 0),
+		ofPoint(1, 0.5, 0),
+		ofPoint(1, 1, 0),
+		ofPoint(0.5, 1, 0),
+		ofPoint(0, 1, 0),
+		ofPoint(0, 1, 0.5),
+		ofPoint(0, 1, 1),
+		ofPoint(0, 0.5, 1),
+		ofPoint(0, 0, 1),
+		ofPoint(0.5, 0, 1),
+		ofPoint(1, 0, 1),
+		ofPoint(1, 0, 0.5),
+	};
+	
+	ofPushMatrix();
+	ofScale(w, h);
+	ofSetColor(255,0,0);
+	if(texPts.size() >= 68){
+		glBegin(GL_TRIANGLES);
+		for(int t = 0; t < ntris; t ++){
+			a = triangles[t][0];
+			b = triangles[t][1];
+			c = triangles[t][2];
+			ca = colors[a % colors.size()];
+			cb = colors[b % colors.size()];
+			cc = colors[c % colors.size()];
+			
+			//glColor3f(ca.x, ca.y, ca.z);
+			glVertex2f(texPts[a]->x, texPts[a]->y );
+			//glColor3f(cb.x, cb.y, cb.z);
+			glVertex2f(texPts[b]->x, texPts[b]->y );
+			//glColor3f(cc.x, cc.y, cc.z);
+			glVertex2f(texPts[c]->x, texPts[c]->y );
+			
+			
+		}
+		glEnd();
+	}
+	ofPopMatrix();
+	
+	// draw points
+	
+	ofSetColor(255);
+	ofFill();
+	for(int i = 0; i < texPts.size(); i++){
+		ofDrawEllipse( w * texPts[i]->x, h * texPts[i]->y, 7, 7);
+	}
+	ofSetColor(0);
+	ofFill();
+	for(int i = 0; i < texPts.size(); i++){
+		ofDrawEllipse( w * texPts[i]->x, h * texPts[i]->y, 5, 5);
+	}
+	
+	if(selPt != NULL){
+		ofSetColor(255);
+		ofDrawEllipse( w * selPt->x, h * selPt->y, 9, 9);
+		
+		ofSetColor(255,0,0);
+		ofDrawEllipse( w * selPt->x, h * selPt->y, 7, 7);
+	}
+	
+	ofPopMatrix();
+}
+
+//--------------------------------------------------------------
+void ofApp::unselectPts(){
+	selPt = NULL;
+}
+
+//--------------------------------------------------------------
+void ofApp::exportFacePoints(){
+	string output = "";
+	
+	float x,y, w, h;
+	for(int i = 0; i < shapes.size(); i++){
+		full_object_detection shape = shapes[i];
+		ofPoint minPt ( 999999, 999999);
+		ofPoint maxPt (-999999,-999999);
+		for(int j = 0; j < shape.num_parts(); j++){
+			minPt.x = MIN(shape.part(j).x(), minPt.x);
+			minPt.y = MIN(shape.part(j).y(), minPt.y);
+			maxPt.x = MAX(shape.part(j).x(), maxPt.x);
+			maxPt.y = MAX(shape.part(j).y(), maxPt.y);
+		}
+		
+		x = ((minPt + maxPt)/2).x;
+		y = ((minPt + maxPt)/2).y;
+		w = (maxPt - minPt).x;
+		h = (maxPt - minPt).y;
+		
+		if( w > 0 && h > 0){
+			output += "\n texPts = {";
+			output += "\n\t// Face Nr."+ofToString(i)+" width = " + ofToString(w) + ", height = " + ofToString(h);
+			for(int j = 0; j < shape.num_parts(); j++){
+				output += "\n\tnew ofPoint(" + ofToString((shape.part(j).x()-x)/w ,4) +", " +
+				ofToString((shape.part(j).y()-y)/h ,4) + " ), // " + ofToString(j);
+			}
+			output += "\n};\n";
+			
+		}
+	}
+	
+	cout << "FACES : " << endl << output << endl;
+}
+
+
+
+#pragma mark - UVC
+
+
+
+//----------------------------------------------------------------------
+void ofApp::setupUVC(){
+	/*
+		name: Logitech c920
+		vendorId : 0x046d
+		productId: 0x082d
+		interfaceNum: 0x00
+		# 1280x720 (this is 1/2 res)
+		width: 1280
+		height: 720
+	 */
+	cameraName = "Logitech c920";
+	int vendorId = 0x046d;
+	int productId = 0x082d;
+	int interfaceNum = 0x00;
+	
+	fps = 1;
+	focus = 0.00;
+	exposure = 0.95;
+	bAutoExposure = true;
+	bAutoFocus = false;
+	
+	uvcControl.useCamera(vendorId, productId, interfaceNum);
+	/*
+	 uvcControl.setAutoExposure(bAutoFocus);
+	 uvcControl.setAutoFocus(bAutoExposure);
+	 uvcControl.setAbsoluteFocus(focus);
+	 uvcControl.setExposure(exposure);
+	 */
+}
+
+
+#pragma mark - BUTTONS
+
+//----------------------------------------------------------------------
+void ofApp::setupButtons() {
+	
+	bUpdateUVC = false;
+	
+	buttons.setup();
+	
+	buttons.addButtonPanel("DLib");
+	buttons.addToggleItem("Use DLib", bUseDLib);
+	buttons.addSliderItem("FPS", 0, 200, fps);
+	buttons.addToggleItem("Scale up", bScaleUp);
+	
+	buttons.addButtonPanel("UVC Camera");
+	buttons.addToggleItem("AutoFocus", bAutoFocus);
+	buttons.addSliderItem("Focus", 0, 1, focus);
+	buttons.addToggleItem("AutoExposure", bAutoExposure);
+	buttons.addSliderItem("Exposure", 0, 1, exposure);
+	buttons.addFlashItem("Update Camera", bUpdateUVC);
+	
+	buttons.addButtonPanel("Drawing");
+	buttons.addSelectionItem("Points", DRAW_POINTS, drawState);
+	buttons.addSelectionItem("Connections", DRAW_CONNECTIONS, drawState);
+	buttons.addSelectionItem("Triangles", DRAW_TRIANGLES, drawState);
+	buttons.addSelectionItem("Texture", DRAW_TEXTURED, drawState);
+	buttons.addSelectionItem("Edit Points", EDIT_POINTS, drawState);
+	
+	
+	buttons.loadSettings();
+}
+
+
+//----------------------------------------------------------------------
+void ofApp::updateButtons() {
+	
+	if(bUpdateUVC){
+		uvcControl.setAutoExposure(bAutoExposure);
+		uvcControl.setAutoFocus(bAutoFocus);
+		uvcControl.setExposure(exposure);
+		uvcControl.setAbsoluteFocus(focus);
+	}
+	
+}
+
+#pragma mark - EVENTS
+
+
+//--------------------------------------------------------------
+void ofApp::keyPressed (int key) {
+	switch (key) {
+		case 's':
+			buttons.saveSettings();
+			break;
+		case 'd':
+			bUseDLib = !bUseDLib;
+			break;
+		case 'e':
+			exportFacePoints();
+			break;
+	}
+}
+
+//--------------------------------------------------------------
+void ofApp::mouseDragged(int x, int y, int button){
+	if(drawState == EDIT_POINTS){
+		drag(ofPoint(x,y));
+	}
+}
+//--------------------------------------------------------------
+void ofApp::mousePressed(int x, int y, int button){
+	if(drawState == EDIT_POINTS){
+		clickPts(ofPoint(x,y));
+	}
+}
+//--------------------------------------------------------------
+void ofApp::mouseReleased(int x, int y, int button){
+	if(drawState == EDIT_POINTS){
+		unselectPts();
+	}
+}
+
+
+
+#pragma mark - HELPERS
+
+//--------------------------------------------------------------
+void ofApp::setDLibImageFromPixels( array2d<unsigned char> &newImg, unsigned char * pix, int w, int h, int ofPixelType){
+	
+	image_view< array2d <unsigned char> > t(newImg);
+	if(newImg.nc() != w || newImg.nr() != h){
+		//cout << "Rescale DLIB img from "<< newImg.nc() << "x"<< newImg.nr() << " to " << w << "x" << h << endl;
+		newImg.set_size( h, w );
+	}
+	for ( unsigned y = 0; y < h; y++ ){ // y
+		for ( unsigned x = 0; x < w; x++ ){ // x
+			if ( ofPixelType == OF_IMAGE_GRAYSCALE ){
+				unsigned char p = pix[x + y * w];
+				assign_pixel( newImg[y][x], p );
+			}else if( ofPixelType == OF_IMAGE_COLOR){ // assume RGB!
+				rgb_pixel p;
+				p.red	= pix[3 * (x + y * w) ];
+				p.green = pix[3 * (x + y * w)+1];
+				p.blue	= pix[3 * (x + y * w)+2];
+				assign_pixel( newImg[y][x], p );
+			}
+		}
+	}
+}
+
+//--------------------------------------------------------------
+void ofApp::imgToDLibImage( array2d<unsigned char> &newImg, ofImage &srcImg){
+	
+	//array2d <unsigned char> newImg;
+	
+	unsigned h = srcImg.getHeight();
+	unsigned w = srcImg.getWidth();
+	unsigned char * pix = srcImg.getPixels();
+	
+	image_view< array2d <unsigned char> > t(newImg);
+	
+	int ofPixelType = srcImg.getImageType();
+	cout << "image type is " << ofPixelType << endl;
+	newImg.set_size( h, w );
+	
+	for ( unsigned y = 0; y < h; y++ ){ // y
+		for ( unsigned x = 0; x < w; x++ ){ // x
+			if ( ofPixelType == OF_IMAGE_GRAYSCALE ){
+				unsigned char p = pix[x + y * w];
+				assign_pixel( newImg[y][x], p );
+			}else if( ofPixelType == OF_IMAGE_COLOR){ // assume RGB!
+				rgb_pixel p;
+				p.red	= pix[3 * (x + y * w) ];
+				p.green = pix[3 * (x + y * w)+1];
+				p.blue	= pix[3 * (x + y * w)+2];
+				assign_pixel( newImg[y][x], p );
+			}
+		}
+	}
+}
+
+
+//--------------------------------------------------------------
+void ofApp::DLibImageToImg( array2d<unsigned char> &srcImg, ofImage &destImg){
+	
+	//image_view< array2d <unsigned char> > t(srcImg);
+	
+	unsigned h = srcImg.nr(); // number of rows
+	unsigned w = srcImg.nc(); // number of cols
+	srcImg.width_step();
+	destImg.clear();
+	destImg.allocate(w, h, OF_IMAGE_COLOR);
+	
+	unsigned char * pix = destImg.getPixels();
+	
+	
+	
+	/*
+	 int colorMode = srcImg.getImageType();
+	 
+	 newImg.set_size( h, w );
+	 
+	 for ( unsigned n = 0; n < h;n++ ){ // y
+		unsigned char* v = &(pix[ n * w]);
+		
+		for ( unsigned m = 0; m < w; m++ ){ // x
+	 if ( colorMode == OF_IMAGE_GRAYSCALE ){
+	 unsigned char p = v[m];
+	 assign_pixel( newImg[n][m], p );
+	 }else if( colorMode == OF_IMAGE_COLOR){ // assume RGB!
+	 rgb_pixel p;
+	 p.red = v[m*3];
+	 p.green = v[m*3+1];
+	 p.blue = v[m*3+2];
+	 assign_pixel( newImg[n][m], p );
+	 }
+		}
+	 }
+	 */
+}
+
+
+
+// The contents of this file are in the public domain. See LICENSE_FOR_EXAMPLE_PROGRAMS.txt
+/*
+ 
+ This example program shows how to find frontal human faces in an image.  In
+ particular, this program shows how you can take a list of images from the
+ command line and display each on the screen with red boxes overlaid on each
+ human face.
+ 
+ The examples/faces folder contains some jpg images of people.  You can run
+ this program on them and see the detections by executing the following command:
+ ./face_detection_ex faces/*.jpg
+ 
+ 
+ This face detector is made using the now classic Histogram of Oriented
+ Gradients (HOG) feature combined with a linear classifier, an image pyramid,
+ and sliding window detection scheme.  This type of object detector is fairly
+ general and capable of detecting many types of semi-rigid objects in
+ addition to human faces.  Therefore, if you are interested in making your
+ own object detectors then read the fhog_object_detector_ex.cpp example
+ program.  It shows how to use the machine learning tools which were used to
+ create dlib's face detector.
+ 
+ 
+ Finally, note that the face detector is fastest when compiled with at least
+ SSE2 instructions enabled.  So if you are using a PC with an Intel or AMD
+ chip then you should enable at least SSE2 instructions.  If you are using
+ cmake to compile this program you can enable them by using one of the
+ following commands when you create the build project:
+ cmake path_to_dlib_root/examples -DUSE_SSE2_INSTRUCTIONS=ON
+ cmake path_to_dlib_root/examples -DUSE_SSE4_INSTRUCTIONS=ON
+ cmake path_to_dlib_root/examples -DUSE_AVX_INSTRUCTIONS=ON
+ This will set the appropriate compiler options for GCC, clang, Visual
+ Studio, or the Intel compiler.  If you are using another compiler then you
+ need to consult your compiler's manual to determine how to enable these
+ instructions.  Note that AVX is the fastest but requires a CPU from at least
+ 2011.  SSE4 is the next fastest and is supported by most current machines.
+ */
+
+
+/****************************************
+ 
+	THE EXAMPLE
+ 
+ #include <dlib/image_processing/frontal_face_detector.h>
+ #include <dlib/gui_widgets.h>
+ #include <dlib/image_io.h>
+ #include <iostream>
+ 
+ using namespace dlib;
+ using namespace std;
+ 
+ // ----------------------------------------------------------------------------------------
+ 
+ int main(int argc, char** argv)
+ {
+	try
+	{
+ if (argc == 1)
+ {
+ cout << "Give some image files as arguments to this program." << endl;
+ return 0;
+ }
+ 
+ frontal_face_detector detector = get_frontal_face_detector();
+ image_window win;
+ 
+ // Loop over all the images provided on the command line.
+ for (int i = 1; i < argc; ++i)
+ {
+ cout << "processing image " << argv[i] << endl;
+ array2d<unsigned char> img;
+ load_image(img, argv[i]);
+ // Make the image bigger by a factor of two.  This is useful since
+ // the face detector looks for faces that are about 80 by 80 pixels
+ // or larger.  Therefore, if you want to find faces that are smaller
+ // than that then you need to upsample the image as we do here by
+ // calling pyramid_up().  So this will allow it to detect faces that
+ // are at least 40 by 40 pixels in size.  We could call pyramid_up()
+ // again to find even smaller faces, but note that every time we
+ // upsample the image we make the detector run slower since it must
+ // process a larger image.
+ pyramid_up(img);
+ 
+ // Now tell the face detector to give us a list of bounding boxes
+ // around all the faces it can find in the image.
+ std::vector<rectangle> dets = detector(img);
+ 
+ cout << "Number of faces detected: " << dets.size() << endl;
+ // Now we show the image on the screen and the face detections as
+ // red overlay boxes.
+ win.clear_overlay();
+ win.set_image(img);
+ win.add_overlay(dets, rgb_pixel(255,0,0));
+ 
+ cout << "Hit enter to process the next image..." << endl;
+ cin.get();
+ }
+	}
+	catch (exception& e)
+	{
+ cout << "\nexception thrown!" << endl;
+ cout << e.what() << endl;
+	}
+ }
+ 
+ // ----------------------------------------------------------------------------------------
+ 
+ 
+ *****************************************/

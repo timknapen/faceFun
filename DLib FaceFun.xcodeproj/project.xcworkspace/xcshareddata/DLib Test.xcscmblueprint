@@ -1,0 +1,44 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "E32410CFFA0A8E0FEAEE8DF64058B6F7E7A3C0A8",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "497B1E3E4A0ED63FB1561A2500BE931702F4E999" : 0,
+    "5653822A9145949A7E7B25DE143BB48BFCD55062" : 0,
+    "957B2B8513E857A03FBDB72A23B1F36E5E6B9408" : 0,
+    "E32410CFFA0A8E0FEAEE8DF64058B6F7E7A3C0A8" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "FB93832F-5CA9-4910-9ED6-82AFC566758D",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "497B1E3E4A0ED63FB1561A2500BE931702F4E999" : "..\/addons\/ofxDLib",
+    "5653822A9145949A7E7B25DE143BB48BFCD55062" : "..\/addons\/ofxUVC",
+    "957B2B8513E857A03FBDB72A23B1F36E5E6B9408" : "..\/addons\/ofxButtons",
+    "E32410CFFA0A8E0FEAEE8DF64058B6F7E7A3C0A8" : "Megane\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "DLib Test",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "DLib Landmarks\/DLib Test.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/10K\/ofxdlib.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "497B1E3E4A0ED63FB1561A2500BE931702F4E999"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/10K\/ofxuvc.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5653822A9145949A7E7B25DE143BB48BFCD55062"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/timknapen\/ofxButtons.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "957B2B8513E857A03FBDB72A23B1F36E5E6B9408"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/10K\/facetracking.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "E32410CFFA0A8E0FEAEE8DF64058B6F7E7A3C0A8"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "957B2B8513E857A03FBDB72A23B1F36E5E6B9408" : 0,
+    "5653822A9145949A7E7B25DE143BB48BFCD55062" : 0,
+    "497B1E3E4A0ED63FB1561A2500BE931702F4E999" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "E48299DD-7A10-4585-A87D-E293E9798AF4",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "957B2B8513E857A03FBDB72A23B1F36E5E6B9408" : "..\/..\/addons\/ofxButtons",
+    "5653822A9145949A7E7B25DE143BB48BFCD55062" : "..\/..\/addons\/ofxUVC",
+    "497B1E3E4A0ED63FB1561A2500BE931702F4E999" : "..\/..\/addons\/ofxDLib"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "DLib LandMarks",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "DLib LandMarks.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/10K\/ofxdlib.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "497B1E3E4A0ED63FB1561A2500BE931702F4E999"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/10K\/ofxuvc.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5653822A9145949A7E7B25DE143BB48BFCD55062"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/timknapen\/ofxButtons.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "957B2B8513E857A03FBDB72A23B1F36E5E6B9408"
+    }
+  ]
+}
