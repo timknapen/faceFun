@@ -7,31 +7,13 @@ void ofApp::setup() {
 	ofSetVerticalSync(true);
 	ofSetFrameRate(60);
 	
-	cam.setVerbose(true);
-	std::vector<ofVideoDevice> cams =  cam.listDevices();
-	cout << endl << endl << "Video Devices: " << endl;
-	for(int i = 0; i < cams.size(); i++){
-		cout << "cam " << i << " " << cams[i].deviceName << endl;
-		cout << "\t	id : " << cams[i].id << endl;
-		cout << "\t hardware : " << cams[i].hardwareName << endl;
-		std::vector <ofVideoFormat> formats = cams[i].formats;
-		for(int f = 0; f < formats.size(); f++){
-			cout << "\t" << formats[f].width << "x" << formats[f].height << " : " << formats[f].pixelFormat << endl;
-		}
-	}
-	cout << endl;
-	cam.setDeviceID(0);
-	cam.initGrabber( 1280, 720);
-	
-	//	1280 x 960	//	640 x 480	//	320 x 240
-	//  1280 x 720	//  640 x 360	//	320 x 180
-	//	1920 x 1080	//	960 x 540	//	480 x 270
+	setupCamera(cam);
 	
 	fps = 0;
 	
 	setupFaceTriangles();
 	setupFaceTexturePoints();
-	faceTexture.load("facePattern1.png");
+	faceTexture.load("facePattern.png");
 	
 	selPt = NULL;
 	
@@ -115,27 +97,17 @@ void ofApp::draw() {
 		{
 			if(cam.getWidth() > ofGetWidth()){
 				// scale down
-				ofScale(.5, .5);
+				float camScale = ofGetWidth()/cam.getWidth();
+				ofScale(camScale, camScale);
 			}
 			cam.draw(0, 0);
-			
 			
 			ofPushMatrix();
 			{
 				if(bScaleUp){
 					ofScale(.5, .5);
 				}
-				/*
-				 ofSetColor(255, 0, 0);
-				 ofSetLineWidth(2);
-				 ofNoFill();
-				 for(int i = 0; i < dets.size(); i++){
-				 ofDrawRectangle( dets[i].left(),
-				 dets[i].top(),
-				 dets[i].width(),
-				 dets[i].height());
-				 }
-				 */
+				
 				
 				switch(drawState){
 					case DRAW_POINTS:
@@ -368,8 +340,6 @@ void ofApp::setupFaceTriangles(){
 		{ 2, 3, 41},
 		{ 40, 41, 3},
 		{ 3, 31, 40},
-		{ 40, 30, 29},
-		{ 40, 31, 30},
 		
 		// cheek to nose
 		{ 31, 3, 48},
@@ -405,9 +375,18 @@ void ofApp::setupFaceTriangles(){
 		{ 21, 39, 27},
 		
 		// left eye nose
-		{ 39, 28, 27},
-		{ 39, 29, 28},
-		{ 40, 29, 39},
+		//{ 39, 28, 27},
+		//{ 39, 29, 28},
+		//{ 40, 29, 39},
+		//{ 40, 30, 29},
+		//{ 40, 31, 30},
+		{ 29, 31, 30 },
+		{ 28, 31, 29 },
+		{ 27, 31, 28 },
+		
+		{ 39, 40, 31},
+		{ 39, 31, 27},
+
 		
 		
 		// right eyebrow
@@ -490,77 +469,76 @@ void ofApp::setupFaceTriangles(){
 //--------------------------------------------------------------
 void ofApp::setupFaceTexturePoints(){
  texPts = {
-	 // width = 373, height = 374
-	 new ofPoint(-0.5000, -0.2888 ), // 0
-	 new ofPoint(-0.4893, -0.1524 ), // 1
-	 new ofPoint(-0.4705, -0.0160 ), // 2
-	 new ofPoint(-0.4383, 0.1176 ), // 3
-	 new ofPoint(-0.3954, 0.2433 ), // 4
-	 new ofPoint(-0.3231, 0.3503 ), // 5
-	 new ofPoint(-0.2265, 0.4278 ), // 6
+	 // texture points
+	 new ofPoint(-0.5000, -0.3160 ), // 0
+	 new ofPoint(-0.4920, -0.1900 ), // 1
+	 new ofPoint(-0.4740, -0.0460 ), // 2
+	 new ofPoint(-0.4540, 0.0900 ), // 3
+	 new ofPoint(-0.4260, 0.2460 ), // 4
+	 new ofPoint(-0.3580, 0.3300 ), // 5
+	 new ofPoint(-0.2420, 0.4220 ), // 6
 	 new ofPoint(-0.1220, 0.4866 ), // 7
-	 new ofPoint(0.0040, 0.5000 ), // 8
+	 new ofPoint(0.0020, 0.4980 ), // 8
 	 new ofPoint(0.1300, 0.4786 ), // 9
 	 new ofPoint(0.2426, 0.4118 ), // 10
-	 new ofPoint(0.3365, 0.3235 ), // 11
-	 new ofPoint(0.3981, 0.2112 ), // 12
-	 new ofPoint(0.4437, 0.0856 ), // 13
+	 new ofPoint(0.3460, 0.3240 ), // 11
+	 new ofPoint(0.4240, 0.2480 ), // 12
+	 new ofPoint(0.4520, 0.0840 ), // 13
 	 new ofPoint(0.4705, -0.0481 ), // 14
 	 new ofPoint(0.4893, -0.1845 ), // 15
-	 new ofPoint(0.5000, -0.3209 ), // 16
+	 new ofPoint(0.5040, -0.3220 ), // 16
 	 new ofPoint(-0.4410, -0.4011 ), // 17
 	 new ofPoint(-0.3794, -0.4759 ), // 18
-	 new ofPoint(-0.2802, -0.4866 ), // 19
-	 new ofPoint(-0.1783, -0.4626 ), // 20
-	 new ofPoint(-0.0925, -0.4171 ), // 21
-	 new ofPoint(0.0469, -0.4305 ), // 22
-	 new ofPoint(0.1354, -0.4786 ), // 23
-	 new ofPoint(0.2373, -0.5000 ), // 24
-	 new ofPoint(0.3365, -0.4840 ), // 25
-	 new ofPoint(0.3981, -0.4198 ), // 26
-	 new ofPoint(-0.0228, -0.3182 ), // 27
-	 new ofPoint(-0.0228, -0.2380 ), // 28
-	 new ofPoint(-0.0228, -0.1631 ), // 29
-	 new ofPoint(-0.0228, -0.0856 ), // 30
-	 new ofPoint(-0.1113, 0.0214 ), // 31
-	 new ofPoint(-0.0657, 0.0294 ), // 32
-	 new ofPoint(-0.0201, 0.0374 ), // 33
-	 new ofPoint(0.0308, 0.0267 ), // 34
-	 new ofPoint(0.0764, 0.0134 ), // 35
-	 new ofPoint(-0.3391, -0.2941 ), // 36
-	 new ofPoint(-0.2828, -0.3316 ), // 37
-	 new ofPoint(-0.2105, -0.3316 ), // 38
-	 new ofPoint(-0.1488, -0.2807 ), // 39
-	 new ofPoint(-0.2105, -0.2647 ), // 40
-	 new ofPoint(-0.2855, -0.2620 ), // 41
-	 new ofPoint(0.1113, -0.2968 ), // 42
-	 new ofPoint(0.1676, -0.3556 ), // 43
-	 new ofPoint(0.2373, -0.3583 ), // 44
-	 new ofPoint(0.2936, -0.3209 ), // 45
-	 new ofPoint(0.2453, -0.2861 ), // 46
-	 new ofPoint(0.1783, -0.2834 ), // 47
-	 new ofPoint(-0.1542, 0.2567 ), // 48
-	 new ofPoint(-0.1059, 0.2005 ), // 49
-	 new ofPoint(-0.0523, 0.1684 ), // 50
-	 new ofPoint(-0.0147, 0.1765 ), // 51
-	 new ofPoint(0.0282, 0.1604 ), // 52
-	 new ofPoint(0.0898, 0.1872 ), // 53
-	 new ofPoint(0.1515, 0.2326 ), // 54
-	 new ofPoint(0.0979, 0.2834 ), // 55
-	 new ofPoint(0.0389, 0.3075 ), // 56
-	 new ofPoint(-0.0067, 0.3128 ), // 57
-	 new ofPoint(-0.0442, 0.3155 ), // 58
-	 new ofPoint(-0.1032, 0.2995 ), // 59
-	 new ofPoint(-0.1220, 0.2513 ), // 60
-	 new ofPoint(-0.0496, 0.2139 ), // 61
-	 new ofPoint(-0.0121, 0.2139 ), // 62
-	 new ofPoint(0.0282, 0.2086 ), // 63
-	 new ofPoint(0.1193, 0.2326 ), // 64
-	 new ofPoint(0.0335, 0.2433 ), // 65
-	 new ofPoint(-0.0094, 0.2487 ), // 66
-	 new ofPoint(-0.0469, 0.2487 ), // 67
+	 new ofPoint(-0.2700, -0.4980 ), // 19
+	 new ofPoint(-0.1500, -0.4980 ), // 20
+	 new ofPoint(-0.0580, -0.4480 ), // 21
+	 new ofPoint(0.0540, -0.4460 ), // 22
+	 new ofPoint(0.1380, -0.4940 ), // 23
+	 new ofPoint(0.2620, -0.4920 ), // 24
+	 new ofPoint(0.3720, -0.4780 ), // 25
+	 new ofPoint(0.4360, -0.3980 ), // 26
+	 new ofPoint(0.0000, -0.3700 ), // 27
+	 new ofPoint(0.0000, -0.2860 ), // 28
+	 new ofPoint(-0.0040, -0.1880 ), // 29
+	 new ofPoint(-0.0020, -0.0820 ), // 30
+	 new ofPoint(-0.1160, 0.0280 ), // 31
+	 new ofPoint(-0.0540, 0.0660 ), // 32
+	 new ofPoint(-0.0020, 0.0880 ), // 33
+	 new ofPoint(0.0560, 0.0640 ), // 34
+	 new ofPoint(0.1180, 0.0280 ), // 35
+	 new ofPoint(-0.3000, -0.3240 ), // 36
+	 new ofPoint(-0.2540, -0.3540 ), // 37
+	 new ofPoint(-0.1980, -0.3540 ), // 38
+	 new ofPoint(-0.1380, -0.3160 ), // 39
+	 new ofPoint(-0.1980, -0.2920 ), // 40
+	 new ofPoint(-0.2420, -0.2920 ), // 41
+	 new ofPoint(0.1320, -0.3180 ), // 42
+	 new ofPoint(0.1900, -0.3540 ), // 43
+	 new ofPoint(0.2540, -0.3560 ), // 44
+	 new ofPoint(0.3040, -0.3200 ), // 45
+	 new ofPoint(0.2460, -0.2920 ), // 46
+	 new ofPoint(0.1920, -0.2920 ), // 47
+	 new ofPoint(-0.1780, 0.2480 ), // 48
+	 new ofPoint(-0.1120, 0.2020 ), // 49
+	 new ofPoint(-0.0460, 0.1780 ), // 50
+	 new ofPoint(0.0000, 0.1920 ), // 51
+	 new ofPoint(0.0460, 0.1820 ), // 52
+	 new ofPoint(0.1060, 0.2020 ), // 53
+	 new ofPoint(0.1760, 0.2480 ), // 54
+	 new ofPoint(0.1180, 0.2920 ), // 55
+	 new ofPoint(0.0520, 0.3140 ), // 56
+	 new ofPoint(0.0000, 0.3160 ), // 57
+	 new ofPoint(-0.0540, 0.3160 ), // 58
+	 new ofPoint(-0.1240, 0.2920 ), // 59
+	 new ofPoint(-0.1380, 0.2480 ), // 60
+	 new ofPoint(-0.0600, 0.2260 ), // 61
+	 new ofPoint(0.0000, 0.2240 ), // 62
+	 new ofPoint(0.0540, 0.2260 ), // 63
+	 new ofPoint(0.1300, 0.2480 ), // 64
+	 new ofPoint(0.0560, 0.2480 ), // 65
+	 new ofPoint(0.0000, 0.2480 ), // 66
+	 new ofPoint(-0.0620, 0.2480 ), // 67
  };
-	
 }
 
 //MARK: - EDIT TEXTURE
@@ -677,6 +655,8 @@ void ofApp::drawTexturePoints(){
 	ofFill();
 	for(int i = 0; i < texPts.size(); i++){
 		ofDrawEllipse( w * texPts[i]->x, h * texPts[i]->y, 5, 5);
+		ofDrawBitmapString(ofToString(i), w * texPts[i]->x + 5,  h * texPts[i]->y + 5);
+
 	}
 	
 	if(selPt != NULL){
@@ -731,11 +711,67 @@ void ofApp::exportFacePoints(){
 	cout << "FACES : " << endl << output << endl;
 }
 
+//--------------------------------------------------------------
+void ofApp::exportTexturePoints(){
+	string output = "";
+	
+	output += "\n texPts = {";
+	output += "\n\t// texture points";
+	for(int i = 0; i < texPts.size(); i++){
+		output += "\n\tnew ofPoint(" + ofToString(texPts[i]->x, 4) +", " +
+		ofToString(texPts[i]->y, 4) + " ), // " + ofToString(i);
+	}
+	output += "\n};\n";
+	
+	cout << "FACE POINTS : " << endl << output << endl;
+}
 
 
 #pragma mark - UVC
 
 
+void ofApp::setupCamera(ofVideoGrabber &vidGrabber){
+	bool bHasUVCCam = false;
+	
+	std::vector <ofVideoDevice> cams =  vidGrabber.listDevices();
+	cout << endl << cams.size() << " Video Devices: " << endl;
+	int selDevice = 0;
+	for(int i = 0; i < cams.size(); i++){
+		if(cams[i].deviceName.find("C920") != string::npos){
+			selDevice = i;
+			bHasUVCCam = true;
+			cout << " * ";
+		}else{
+			cout << "   " ;
+		}
+		std::vector <ofVideoFormat> formats = cams[i].formats;
+		
+		cout << i << " device: " << cams[i].deviceName
+		<< " id: " << cams[i].id
+		<< " formats: " << formats.size()
+		<< endl;
+		for( int j = 0; j < formats.size(); j++){
+			cout << "\t" << formats[j].width << " x " << formats[j].height << endl;
+			for(int k = 0; k < formats[j].framerates.size(); k++){
+				cout << "\t\t " << formats[j].framerates[k] << "fps" << endl;
+			}
+		}
+	}
+	cout << "____________" << endl << endl;
+	vidGrabber.setDeviceID(selDevice);
+	vidGrabber.setUseTexture(false);
+	vidGrabber.setup( 1280, 720);
+	
+	//	1280 x 960	//	640 x 480	//	320 x 240
+	//  1280 x 720	//  640 x 360	//	320 x 180
+	//	1920 x 1080	//	960 x 540	//	480 x 270
+	
+	
+	//Setup OpenCV
+	int w = vidGrabber.getWidth();
+	int h = vidGrabber.getHeight();
+	cout << "Started camera with dimensions " << w << " x " << h << endl;
+}
 
 //----------------------------------------------------------------------
 void ofApp::setupUVC(){
@@ -816,7 +852,6 @@ void ofApp::updateButtons() {
 
 #pragma mark - EVENTS
 
-
 //--------------------------------------------------------------
 void ofApp::keyPressed (int key) {
 	switch (key) {
@@ -828,6 +863,9 @@ void ofApp::keyPressed (int key) {
 			break;
 		case 'e':
 			exportFacePoints();
+			break;
+		case 'p':
+			exportTexturePoints();
 			break;
 	}
 }

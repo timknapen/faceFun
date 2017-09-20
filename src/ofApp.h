@@ -49,6 +49,7 @@ public:
 	
 
 	//MARK: -  UVC control
+	void setupCamera( ofVideoGrabber &vidGrabber);
 	void setupUVC();
 	ofxUVC uvcControl;
 	string cameraName;
@@ -70,6 +71,7 @@ public:
 	void drawTriangles();
 	void drawTextured();
 	void exportFacePoints();
+	void exportTexturePoints();
 	
 	// editing
 	ofPoint * selPt;

@@ -1,17 +1,20 @@
 {
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "99230585E672AC7218E9D57214B88481D34FE5A0",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
 
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "99230585E672AC7218E9D57214B88481D34FE5A0" : 9223372036854775807,
+    "497B1E3E4A0ED63FB1561A2500BE931702F4E999" : 9223372036854775807,
     "957B2B8513E857A03FBDB72A23B1F36E5E6B9408" : 9223372036854775807,
-    "5653822A9145949A7E7B25DE143BB48BFCD55062" : 9223372036854775807,
-    "497B1E3E4A0ED63FB1561A2500BE931702F4E999" : 9223372036854775807
+    "5653822A9145949A7E7B25DE143BB48BFCD55062" : 9223372036854775807
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "AEEC2482-D2B3-4446-9DAC-15C43E6B10D9",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "99230585E672AC7218E9D57214B88481D34FE5A0" : "DLib%20FaceFun\/",
+    "497B1E3E4A0ED63FB1561A2500BE931702F4E999" : "..\/..\/addons\/ofxDLib",
     "957B2B8513E857A03FBDB72A23B1F36E5E6B9408" : "..\/..\/addons\/ofxButtons",
-    "5653822A9145949A7E7B25DE143BB48BFCD55062" : "..\/..\/addons\/ofxUVC",
-    "497B1E3E4A0ED63FB1561A2500BE931702F4E999" : "..\/..\/addons\/ofxDLib"
+    "5653822A9145949A7E7B25DE143BB48BFCD55062" : "..\/..\/addons\/ofxUVC"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "DLib FaceFun",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
@@ -31,6 +34,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/timknapen\/ofxButtons.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "957B2B8513E857A03FBDB72A23B1F36E5E6B9408"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/gitlab.com\/10K\/DLib-FaceFun.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "99230585E672AC7218E9D57214B88481D34FE5A0"
     }
   ]
 }
