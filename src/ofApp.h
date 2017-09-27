@@ -32,6 +32,7 @@ public:
 	
 	float fps;
 	ofVideoGrabber cam;
+	bool bDrawCamera;
 
 	//MARK: -  DLIB Face Detection
 	bool bUseDLib;

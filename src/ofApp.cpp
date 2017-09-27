@@ -6,8 +6,9 @@
 void ofApp::setup() {
 	ofSetVerticalSync(true);
 	ofSetFrameRate(60);
-	
+	ofBackground(255);
 	setupCamera(cam);
+	bDrawCamera = true;
 	
 	fps = 0;
 	
@@ -100,7 +101,9 @@ void ofApp::draw() {
 				float camScale = ofGetWidth()/cam.getWidth();
 				ofScale(camScale, camScale);
 			}
-			cam.draw(0, 0);
+			if(bDrawCamera){
+				cam.draw(0, 0);
+			}
 			
 			ofPushMatrix();
 			{
@@ -837,7 +840,7 @@ void ofApp::setupButtons() {
 	buttons.addSelectionItem("Triangles", DRAW_TRIANGLES, drawState);
 	buttons.addSelectionItem("Texture", DRAW_TEXTURED, drawState);
 	buttons.addSelectionItem("Edit Points", EDIT_POINTS, drawState);
-	
+	buttons.addToggleItem("Show Camera", bDrawCamera);
 	
 	buttons.loadSettings();
 }
@@ -872,6 +875,8 @@ void ofApp::keyPressed (int key) {
 		case 'p':
 			exportTexturePoints();
 			break;
+		case 'c':
+			bDrawCamera = !bDrawCamera;
 	}
 }
 
