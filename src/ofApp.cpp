@@ -737,7 +737,7 @@ void ofApp::exportTexturePoints(){
 
 #pragma mark - UVC
 
-
+//--------------------------------------------------------------
 void ofApp::setupCamera(ofVideoGrabber &vidGrabber){
 	bool bHasUVCCam = false;
 	
