@@ -641,7 +641,7 @@
 					../../../addons/ofxDLib/dlib/lib/libdlib.a,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = be.timknapen.landmarktest;
-				PRODUCT_NAME = "DLib FaceFun Debug";
+				PRODUCT_NAME = "DLib FaceFun";
 				WRAPPER_EXTENSION = app;
 				baseConfigurationReference = E4EB6923138AFD0F00A09F29;
 			};

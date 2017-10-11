@@ -96,11 +96,14 @@ void ofApp::draw() {
 	}else{
 		ofPushMatrix();
 		{
-			if(cam.getWidth() > ofGetWidth()){
-				// scale down
+			
+			if(cam.getWidth() > 0){
 				float camScale = ofGetWidth()/cam.getWidth();
+				ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
 				ofScale(camScale, camScale);
+				ofTranslate(-cam.getWidth()/2, -cam.getHeight()/2);
 			}
+			
 			if(bDrawCamera){
 				cam.draw(0, 0);
 			}
@@ -110,7 +113,6 @@ void ofApp::draw() {
 				if(bScaleUp){
 					ofScale(.5, .5);
 				}
-				
 				
 				switch(drawState){
 					case DRAW_POINTS:
@@ -131,15 +133,14 @@ void ofApp::draw() {
 					}
 						break;
 					case DRAW_TRIANGLES:
-					{
 						ofFill();
 						drawTriangles();
-					}
 						break;
 					case DRAW_TEXTURED:
-					{
 						drawTextured();
-					}
+						break;
+					case DRAW_SWAP:
+						drawSwapped();
 						break;
 				}
 				
@@ -299,7 +300,7 @@ void ofApp::drawTextured(){
 	glBindTexture(tex->texData.textureTarget, (GLuint)tex->texData.textureID );
 	glColor3f(1.0, 1.0, 1.0);
 	glBegin(GL_TRIANGLES);
-	int ntris = triangles.size();
+	int ntris = fullTriangles.size();
 	int a, b, c;
 	
 	for(int i = 0; i < shapes.size(); i++){
@@ -309,9 +310,9 @@ void ofApp::drawTextured(){
 		}
 		
 		for(int t = 0; t < ntris; t ++){
-			a = triangles[t][0];
-			b = triangles[t][1];
-			c = triangles[t][2];
+			a = fullTriangles[t][0];
+			b = fullTriangles[t][1];
+			c = fullTriangles[t][2];
 			
 			glTexCoord2f(tx + w * texPts[a]->x, ty + h * texPts[a]->y);
 			glVertex2f(shape.part(a).x(), shape.part(a).y() );
@@ -328,6 +329,53 @@ void ofApp::drawTextured(){
 	glDisable(tex->texData.textureTarget);
 	
 }
+
+//--------------------------------------------------------------
+void ofApp::drawSwapped(){
+	
+	ofTexture  * tex = &(cam.getTexture());
+	
+	float w = faceTexture.getWidth();
+	float h = faceTexture.getHeight();
+	float tx = w/2;
+	float ty = h/2;
+	
+	ofFill();
+	glEnable(tex->texData.textureTarget);
+	glBindTexture(tex->texData.textureTarget, (GLuint)tex->texData.textureID );
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_TRIANGLES);
+	int ntris = fullTriangles.size();
+	int a, b, c;
+	
+	for(int i = 0; i < shapes.size(); i++){
+		full_object_detection shape = shapes[i];
+		full_object_detection texShape = shapes[(i+1)%shapes.size()];
+		if(shape.num_parts() < 68){
+			continue;
+		}
+		
+		for(int t = 0; t < ntris; t ++){
+			a = fullTriangles[t][0];
+			b = fullTriangles[t][1];
+			c = fullTriangles[t][2];
+			
+			glTexCoord2f(texShape.part(a).x(), texShape.part(a).y() );
+			glVertex2f(shape.part(a).x(), shape.part(a).y() );
+			
+			glTexCoord2f(texShape.part(b).x(), texShape.part(b).y());
+			glVertex2f(shape.part(b).x(), shape.part(b).y());
+			
+			glTexCoord2f(texShape.part(c).x(), texShape.part(c).y() );
+			glVertex2f(shape.part(c).x(), shape.part(c).y() );
+		}
+	}
+	
+	glEnd();
+	glDisable(tex->texData.textureTarget);
+	
+}
+
 
 //MARK: -
 
@@ -366,6 +414,7 @@ void ofApp::setupFaceTriangles(){
 		{21, 27, 22},
 		
 		// left eyebrow
+		{ 0, 36, 17},
 		{ 17, 36, 18},
 		{ 18, 36, 37},
 		{ 18, 37, 19},
@@ -391,6 +440,7 @@ void ofApp::setupFaceTriangles(){
 		
 		
 		// right eyebrow
+		{ 26, 45, 16},
 		{ 26, 25, 45},
 		{ 25, 44, 45},
 		{ 25, 24, 44},
@@ -472,6 +522,29 @@ void ofApp::setupFaceTriangles(){
 		{ 54, 10, 11},
 		
 	};
+	fullTriangles = triangles;
+	std::vector < std::vector < int > > extraTris;
+	extraTris = {
+		// close left eye
+		{ 37, 36, 41},
+		{ 37, 41, 38},
+		{ 38, 41, 40},
+		{ 38, 40, 39},
+		// close right eye
+		{ 43, 42, 47},
+		{ 43, 47, 44},
+		{ 44, 47, 46},
+		{ 44, 46, 45},
+		
+		//close mouth
+		{ 61, 60, 67},
+		{ 61, 67, 66},
+		{ 61, 66, 62},
+		{ 62, 66, 63},
+		{ 63, 66, 65},
+		{ 63, 65, 64},
+	};
+	fullTriangles.insert(fullTriangles.end(), extraTris.begin(), extraTris.end());
 }
 
 //--------------------------------------------------------------
@@ -596,6 +669,55 @@ bool ofApp::drag(ofPoint p){
 }
 
 //--------------------------------------------------------------
+void ofApp::drawFlatFace(){
+	ofTexture  * tex = &(cam.getTexture());
+	
+	float w = faceTexture.getWidth();
+	float h = faceTexture.getHeight();
+	float tx = 0;
+	float ty = 0;
+	
+	ofFill();
+	glEnable(tex->texData.textureTarget);
+	glBindTexture(tex->texData.textureTarget, (GLuint)tex->texData.textureID );
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_TRIANGLES);
+	int ntris = fullTriangles.size();
+	int a, b, c;
+	
+	if( shapes.size() > 0){
+		full_object_detection texShape = shapes[0];
+		
+		if(texShape.num_parts() >= 68){
+			
+			for(int t = 0; t < ntris; t ++){
+				a = fullTriangles[t][0];
+				b = fullTriangles[t][1];
+				c = fullTriangles[t][2];
+				
+				glTexCoord2f(texShape.part(a).x(), texShape.part(a).y() );
+				glVertex2f(tx + w * texPts[a]->x, ty + h * texPts[a]->y);
+				
+				glTexCoord2f(texShape.part(b).x(), texShape.part(b).y());
+				glVertex2f(tx + w * texPts[b]->x, ty + h * texPts[b]->y);
+				
+				glTexCoord2f(texShape.part(c).x(), texShape.part(c).y() );
+				glVertex2f(tx + w * texPts[c]->x, ty + h * texPts[c]->y);
+				
+			}
+		}
+		
+		
+	}
+	
+	glEnd();
+	glDisable(tex->texData.textureTarget);
+	
+
+}
+
+
+//--------------------------------------------------------------
 void ofApp::drawTexturePoints(){
 	// draw texture image
 	float w = faceTexture.getWidth();
@@ -603,12 +725,16 @@ void ofApp::drawTexturePoints(){
 	
 	ofPushMatrix();
 	ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
-	ofSetColor(255,255,255);
-	faceTexture.draw(-w/2, -h/2);
+	if(bDrawCamera){
+		drawFlatFace();
+	}else{
+		ofSetColor(255,255,255);
+		faceTexture.draw(-w/2, -h/2);
+	}
 	
 	// draw triangles
 	ofNoFill();
-	int ntris = triangles.size();
+	int ntris = fullTriangles.size();
 	int a, b, c;
 	ofPoint ca, cb, cc; // colors
 	std::vector < ofPoint > colors = {
@@ -632,9 +758,9 @@ void ofApp::drawTexturePoints(){
 	if(texPts.size() >= 68){
 		glBegin(GL_TRIANGLES);
 		for(int t = 0; t < ntris; t ++){
-			a = triangles[t][0];
-			b = triangles[t][1];
-			c = triangles[t][2];
+			a = fullTriangles[t][0];
+			b = fullTriangles[t][1];
+			c = fullTriangles[t][2];
 			ca = colors[a % colors.size()];
 			cb = colors[b % colors.size()];
 			cc = colors[c % colors.size()];
@@ -768,7 +894,7 @@ void ofApp::setupCamera(ofVideoGrabber &vidGrabber){
 	cout << "____________" << endl << endl;
 	vidGrabber.setDeviceID(selDevice);
 	vidGrabber.setUseTexture(false);
-	vidGrabber.setup( 1280, 720);
+	vidGrabber.setup( 640, 480);
 	
 	//	1280 x 960	//	640 x 480	//	320 x 240
 	//  1280 x 720	//  640 x 360	//	320 x 180
@@ -823,7 +949,7 @@ void ofApp::setupButtons() {
 	buttons.setup();
 	
 	buttons.addButtonPanel("DLib");
-	buttons.addToggleItem("Use DLib", bUseDLib);
+	buttons.addToggleItem("Use DLib [D]", bUseDLib);
 	buttons.addSliderItem("FPS", 0, 200, fps);
 	buttons.addToggleItem("Scale up", bScaleUp);
 	
@@ -839,8 +965,10 @@ void ofApp::setupButtons() {
 	buttons.addSelectionItem("Connections", DRAW_CONNECTIONS, drawState);
 	buttons.addSelectionItem("Triangles", DRAW_TRIANGLES, drawState);
 	buttons.addSelectionItem("Texture", DRAW_TEXTURED, drawState);
+	buttons.addSelectionItem("Swap", DRAW_SWAP, drawState);
+
 	buttons.addSelectionItem("Edit Points", EDIT_POINTS, drawState);
-	buttons.addToggleItem("Show Camera", bDrawCamera);
+	buttons.addToggleItem("Show Camera [C]", bDrawCamera);
 	
 	buttons.loadSettings();
 }

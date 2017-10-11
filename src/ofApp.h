@@ -16,6 +16,7 @@ enum drawStates{
 	DRAW_CONNECTIONS,
 	DRAW_TRIANGLES,
 	DRAW_TEXTURED,
+	DRAW_SWAP,
 	EDIT_POINTS
 };
 
@@ -67,13 +68,17 @@ public:
 	void setupFaceTexturePoints();
 	ofImage faceTexture;
 	std::vector < std::vector < int > > triangles;
+	std::vector < std::vector < int > > fullTriangles;
+	
 	std::vector < ofPoint * > texPts;
 	void drawFacePoints();
 	void drawTriangles();
 	void drawTextured();
+	void drawSwapped();
+	void drawFlatFace();
 	void exportFacePoints();
 	void exportTexturePoints();
-	
+		
 	// editing
 	ofPoint * selPt;
 	bool clickPts(ofPoint p);
