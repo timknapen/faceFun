@@ -29,8 +29,9 @@ void ofApp::setup() {
 	deserialize(ofToDataPath("shape_predictor_68_face_landmarks.dat")) >> sp;
 	
 	drawState = DRAW_POINTS;
-	setupButtons();
 	setupUVC();
+
+	setupButtons();
 	
 }
 
@@ -923,6 +924,7 @@ void ofApp::setupUVC(){
 	int productId = 0x082d;
 	int interfaceNum = 0x00;
 	
+	bLEDisOn = true;
 	fps = 1;
 	focus = 0.00;
 	exposure = 0.95;
@@ -936,6 +938,7 @@ void ofApp::setupUVC(){
 	 uvcControl.setAbsoluteFocus(focus);
 	 uvcControl.setExposure(exposure);
 	 */
+	uvcControl.getCameraControls();
 }
 
 
@@ -958,6 +961,7 @@ void ofApp::setupButtons() {
 	buttons.addSliderItem("Focus", 0, 1, focus);
 	buttons.addToggleItem("AutoExposure", bAutoExposure);
 	buttons.addSliderItem("Exposure", 0, 1, exposure);
+	buttons.addToggleItem("LED", bLEDisOn);
 	buttons.addFlashItem("Update Camera", bUpdateUVC);
 	
 	buttons.addButtonPanel("Drawing");
@@ -976,12 +980,12 @@ void ofApp::setupButtons() {
 
 //----------------------------------------------------------------------
 void ofApp::updateButtons() {
-	
-	if(bUpdateUVC){
+	if(bUpdateUVC || ofGetFrameNum() % 30 == 0){
 		uvcControl.setAutoExposure(bAutoExposure);
 		uvcControl.setAutoFocus(bAutoFocus);
 		uvcControl.setExposure(exposure);
 		uvcControl.setAbsoluteFocus(focus);
+		
 	}
 	
 }
@@ -1005,6 +1009,9 @@ void ofApp::keyPressed (int key) {
 			break;
 		case 'c':
 			bDrawCamera = !bDrawCamera;
+		case 'l':
+			uvcControl.setLED(bLEDisOn);
+			break;
 	}
 }
 

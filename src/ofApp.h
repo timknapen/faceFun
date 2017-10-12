@@ -34,7 +34,7 @@ public:
 	float fps;
 	ofVideoGrabber cam;
 	bool bDrawCamera;
-
+	
 	//MARK: -  DLIB Face Detection
 	bool bUseDLib;
     bool bScaleUp;
@@ -53,6 +53,8 @@ public:
 	//MARK: -  UVC control
 	void setupCamera( ofVideoGrabber &vidGrabber);
 	void setupUVC();
+	bool bLEDisOn;
+
 	ofxUVC uvcControl;
 	string cameraName;
 	float focus;
