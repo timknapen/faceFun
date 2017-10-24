@@ -928,6 +928,7 @@ void ofApp::setupButtons() {
 	
 	buttons.setup();
 	
+	
 	buttons.addButtonPanel("DLib");
 	buttons.addToggleItem("Use DLib [D]", bUseDLib);
 	buttons.addSliderItem("FPS", 0, 200, fps);
@@ -943,8 +944,9 @@ void ofApp::setupButtons() {
 	buttons.addSelectionItem("Edit Points", EDIT_POINTS, drawState);
 	buttons.addToggleItem("Show Camera [C]", bDrawCamera);
 	
-	buttons.addButtonPanel("Photo");
+	buttons.addButtonPanel("Tools");
 	buttons.addListItem("Press [SPACE] to save the Photo");
+	buttons.addListItem("Fullscreen [F]");
 	
 	buttons.loadSettings();
 }
