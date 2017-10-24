@@ -19,6 +19,7 @@
 		223BC5F61C105F2E0020725C /* tinyxmlerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5E21C105F2E0020725C /* tinyxmlerror.cpp */; };
 		223BC5F71C105F2E0020725C /* tinyxmlparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5E31C105F2E0020725C /* tinyxmlparser.cpp */; };
 		223BC5F81C105F2E0020725C /* ofxXmlSettings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5E51C105F2E0020725C /* ofxXmlSettings.cpp */; };
+		224864521F9F44E600436298 /* README.MD in Sources */ = {isa = PBXBuildFile; fileRef = 224864511F9F44E600436298 /* README.MD */; };
 		22F5AC001C1F47E5000D0D8D /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22F5ABFF1C1F47E5000D0D8D /* libdlib.a */; };
 		22F5AC021C1F4812000D0D8D /* source.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F5AC011C1F4812000D0D8D /* source.cpp */; };
 		E4328149138ABC9F0047C5CB /* openFrameworksDebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4328148138ABC890047C5CB /* openFrameworksDebug.a */; };
@@ -79,6 +80,7 @@
 		223BC5E31C105F2E0020725C /* tinyxmlparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxmlparser.cpp; sourceTree = "<group>"; };
 		223BC5E51C105F2E0020725C /* ofxXmlSettings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxXmlSettings.cpp; sourceTree = "<group>"; };
 		223BC5E61C105F2E0020725C /* ofxXmlSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxXmlSettings.h; sourceTree = "<group>"; };
+		224864511F9F44E600436298 /* README.MD */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.MD; sourceTree = "<group>"; };
 		22B3761E1C28AB580039388D /* DLib FaceFun Debug.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "DLib FaceFun Debug.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		22F5ABFF1C1F47E5000D0D8D /* libdlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdlib.a; path = ../../../addons/ofxDLib/dlib/lib/libdlib.a; sourceTree = "<group>"; };
 		22F5AC011C1F4812000D0D8D /* source.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = source.cpp; path = dlib/all/source.cpp; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 		E4B69B4A0A3A1720003C02F2 = {
 			isa = PBXGroup;
 			children = (
+				224864511F9F44E600436298 /* README.MD */,
 				22F5ABFF1C1F47E5000D0D8D /* libdlib.a */,
 				E4B6FCAD0C3E899E008CF71C /* openFrameworks-Info.plist */,
 				E4EB6923138AFD0F00A09F29 /* Project.xcconfig */,
@@ -359,6 +362,7 @@
 				223BC5F81C105F2E0020725C /* ofxXmlSettings.cpp in Sources */,
 				223BC5EB1C105F2E0020725C /* ButtonPanel.cpp in Sources */,
 				223BC5F71C105F2E0020725C /* tinyxmlparser.cpp in Sources */,
+				224864521F9F44E600436298 /* README.MD in Sources */,
 				223BC5F51C105F2E0020725C /* tinyxml.cpp in Sources */,
 				223BC5EC1C105F2E0020725C /* FlashItem.cpp in Sources */,
 				223BC5F01C105F2E0020725C /* ToggleItem.cpp in Sources */,
