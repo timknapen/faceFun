@@ -84,5 +84,6 @@ public:
 	void setupButtons();
 	
 	bool bSaveFrame;
+	ofFbo fbo;
 	
 };

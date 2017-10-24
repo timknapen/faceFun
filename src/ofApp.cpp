@@ -38,6 +38,8 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 	
+	
+	
 	cam.update();
 	if(cam.isFrameNew() && bUseDLib) {
 		
@@ -90,6 +92,17 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
+	if(bSaveFrame){
+		float w = ofGetWidth();
+		float h = ofGetHeight();
+		if(fbo.getWidth() != w || fbo.getHeight() != h){
+			fbo.allocate(w, h, GL_RGB, 8);
+		}
+		fbo.begin();
+		ofClear(255, 255, 255);
+
+	}
+	
 	ofSetColor(255);
 	if(drawState == EDIT_POINTS){
 		drawTexturePoints();
@@ -151,8 +164,8 @@ void ofApp::draw() {
 		
 	}
 	if(bSaveFrame){
-		ofImage img;
-		img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+		fbo.end();
+		
 		string fileName =
 		ofToString(ofGetYear()) + "_" +
 		ofToString(ofGetMonth(), 2, '0') + "_" +
@@ -160,9 +173,16 @@ void ofApp::draw() {
 		ofToString(ofGetHours(),2,'0') + "_" +
 		ofToString(ofGetMinutes(), 2, '0')  + "_" +
 		ofToString(ofGetSeconds(), 2, '0');
+		ofPixels pix;
+		fbo.readToPixels(pix);
+		
+		ofImage img;
+		img.setFromPixels(pix, fbo.getWidth(), fbo.getHeight(), pix.getImageType());
 		img.save("photos/" + fileName + ".jpg");
+
 		bSaveFrame = false;
-	}else if(buttons.isVisible()){
+	}
+	if(!bSaveFrame && buttons.isVisible()){
 		ofSetLineWidth(1);
 		ofDrawBitmapStringHighlight(ofToString(fps, 0)+"fps", 10, 40);
 	}
