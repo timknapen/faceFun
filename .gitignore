@@ -3,3 +3,4 @@ facePattern1.png
 bin/data/*.dat
 bin/data/*.png
 bin/data/photos
+*.zip

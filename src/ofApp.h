@@ -61,6 +61,7 @@ public:
 	ofImage faceTexture;
 	std::vector < std::vector < int > > triangles;
 	std::vector < std::vector < int > > fullTriangles;
+	bool bUseEyes;
 	
 	std::vector < ofPoint * > texPts;
 	void drawFacePoints();
