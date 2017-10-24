@@ -48,7 +48,6 @@ public:
 	//MARK: -  DLib Landmark detector
 	shape_predictor sp;
 	std::vector<full_object_detection> shapes;
-	
 
 	//MARK: -  UVC control
 	void setupCamera( ofVideoGrabber &vidGrabber);
@@ -56,12 +55,16 @@ public:
 	
 	//MARK: - Drawing
 	int drawState;
+	void setupFaceParts();
 	void setupFaceTriangles();
 	void setupFaceTexturePoints();
 	ofImage faceTexture;
+	std::vector < std::vector < int > > faceParts; // line strips that are connected
 	std::vector < std::vector < int > > triangles;
-	std::vector < std::vector < int > > fullTriangles;
+	std::vector < std::vector < int > > eyeTriangles;
+	std::vector < std::vector < int > > mouthTriangles;
 	bool bUseEyes;
+	bool bUseMouth;
 	
 	std::vector < ofPoint * > texPts;
 	void drawFacePoints();
@@ -86,4 +89,6 @@ public:
 	bool bSaveFrame;
 	ofFbo fbo;
 	
+	//
+	float fTextureScale;
 };

@@ -13,9 +13,13 @@ void ofApp::setup() {
 	
 	fps = 0;
 	
+	setupFaceParts();
 	setupFaceTriangles();
 	setupFaceTexturePoints();
 	faceTexture.load("facePattern.png");
+	fTextureScale = 1;
+	
+	bUseEyes = bUseMouth = false;
 	
 	selPt = NULL;
 	
@@ -38,7 +42,12 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 	
-	
+	// update texture scaling
+	float w = faceTexture.getWidth();
+	float h = faceTexture.getHeight();
+	if(w != 0 && h != 0){
+		fTextureScale = MIN( (ofGetWidth()-80)/w, (ofGetHeight()-80)/h);
+	}
 	
 	cam.update();
 	if(cam.isFrameNew() && bUseDLib) {
@@ -100,7 +109,7 @@ void ofApp::draw() {
 		}
 		fbo.begin();
 		ofClear(255, 255, 255);
-
+		
 	}
 	
 	ofSetColor(255);
@@ -163,6 +172,7 @@ void ofApp::draw() {
 		ofPopMatrix();
 		
 	}
+	
 	if(bSaveFrame){
 		fbo.end();
 		
@@ -179,9 +189,10 @@ void ofApp::draw() {
 		ofImage img;
 		img.setFromPixels(pix, fbo.getWidth(), fbo.getHeight(), pix.getImageType());
 		img.save("photos/" + fileName + ".jpg");
-
+		
 		bSaveFrame = false;
 	}
+	
 	if(!bSaveFrame && buttons.isVisible()){
 		ofSetLineWidth(1);
 		ofDrawBitmapStringHighlight(ofToString(fps, 0)+"fps", 10, 40);
@@ -205,68 +216,15 @@ void ofApp::drawFacePoints(){
 			continue;
 		}
 		
-		/*
-		 // ALL POINTS
-		 for(int j = 0; j < 68; j++){
-		 ofDrawEllipse(shape.part(j).x(), shape.part(j).y(), 3, 3);
-		 }
-		 */
-		
-		// JAW
-		for(int j = 0; j < 16; j++){
-			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
+		ofSetLineWidth(1);
+		for(int p = 0; p < faceParts.size(); p++){
+			glBegin(GL_LINE_STRIP);
+			for(int i= 0; i < faceParts[p].size(); i++){
+				int a = faceParts[p][i];
+				glVertex2f(shape.part(a).x(), shape.part(a).y() );
+			}
+			glEnd();
 		}
-		// Left eyebrow
-		for(int j = 17; j < 21; j++){
-			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
-		}
-		// Left Eye
-		ofDrawEllipse(	(shape.part(36).x() + shape.part(39).x())/2,
-					  (shape.part(36).y() + shape.part(39).y())/2,
-					  5,5);
-		for(int j = 36; j < 41; j++){
-			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
-		}
-		ofDrawLine(shape.part(41).x(), shape.part(41).y(),  shape.part(36).x(), shape.part(36).y());
-		
-		// Right Eyebrow
-		for(int j = 22; j < 26; j++){
-			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
-		}
-		
-		// Right Eye
-		ofDrawEllipse(	(shape.part(42).x() + shape.part(45).x())/2,
-					  (shape.part(42).y() + shape.part(45).y())/2,
-					  5,5);
-		for(int j = 42; j < 47; j++){
-			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
-		}
-		ofDrawLine(shape.part(47).x(), shape.part(47).y(),  shape.part(42).x(), shape.part(42).y());
-		
-		// Nose
-		for(int j = 27; j < 30; j++){
-			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
-		}
-		for(int j = 31; j < 35; j++){
-			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
-		}
-		
-		
-		// Mouth
-		for(int j = 48; j < 59; j++){
-			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
-		}
-		// reconnect
-		ofDrawLine(shape.part(59).x(), shape.part(59).y(),  shape.part(48).x(), shape.part(48).y());
-		
-		
-		// bottom of mouth
-		ofSetColor(255,100,0);
-		for(int j = 60; j < 67; j++){
-			ofDrawLine(shape.part(j).x(), shape.part(j).y(),  shape.part(j+1).x(), shape.part(j+1).y());
-		}
-		ofDrawLine(shape.part(67).x(), shape.part(67).y(),  shape.part(60).x(), shape.part(60).y());
-		
 	}
 }
 
@@ -336,11 +294,11 @@ void ofApp::drawTextured(){
 	glColor3f(1.0, 1.0, 1.0);
 	glBegin(GL_TRIANGLES);
 	
-
+	int a, b, c;
+	int ntris ;
 	if(bUseEyes){
-		int ntris = fullTriangles.size();
-		int a, b, c;
 		
+		ntris = eyeTriangles.size();
 		for(int i = 0; i < shapes.size(); i++){
 			full_object_detection shape = shapes[i];
 			if(shape.num_parts() < 68){
@@ -348,9 +306,9 @@ void ofApp::drawTextured(){
 			}
 			
 			for(int t = 0; t < ntris; t ++){
-				a = fullTriangles[t][0];
-				b = fullTriangles[t][1];
-				c = fullTriangles[t][2];
+				a = eyeTriangles[t][0];
+				b = eyeTriangles[t][1];
+				c = eyeTriangles[t][2];
 				
 				glTexCoord2f(tx + w * texPts[a]->x, ty + h * texPts[a]->y);
 				glVertex2f(shape.part(a).x(), shape.part(a).y() );
@@ -363,13 +321,37 @@ void ofApp::drawTextured(){
 			}
 		}
 		
-		glEnd();
-		glDisable(tex->texData.textureTarget);
-	}else{
-		int ntris = triangles.size();
-		int a, b, c;
-		
+	}
+	
+	if(bUseMouth){
+		ntris = mouthTriangles.size();
 		for(int i = 0; i < shapes.size(); i++){
+			full_object_detection shape = shapes[i];
+			if(shape.num_parts() < 68){
+				continue;
+			}
+			
+			for(int t = 0; t < ntris; t ++){
+				a = mouthTriangles[t][0];
+				b = mouthTriangles[t][1];
+				c = mouthTriangles[t][2];
+				
+				glTexCoord2f(tx + w * texPts[a]->x, ty + h * texPts[a]->y);
+				glVertex2f(shape.part(a).x(), shape.part(a).y() );
+				
+				glTexCoord2f(tx + w * texPts[b]->x, ty + h * texPts[b]->y);
+				glVertex2f(shape.part(b).x(), shape.part(b).y() );
+				
+				glTexCoord2f(tx + w * texPts[c]->x, ty + h * texPts[c]->y);
+				glVertex2f(shape.part(c).x(), shape.part(c).y() );
+			}
+		}
+		
+	}
+	
+	ntris = triangles.size();
+	
+	for(int i = 0; i < shapes.size(); i++){
 			full_object_detection shape = shapes[i];
 			if(shape.num_parts() < 68){
 				continue;
@@ -393,7 +375,7 @@ void ofApp::drawTextured(){
 		
 		glEnd();
 		glDisable(tex->texData.textureTarget);
-	}
+	
 }
 
 //--------------------------------------------------------------
@@ -412,9 +394,11 @@ void ofApp::drawSwapped(){
 	glColor3f(1.0, 1.0, 1.0);
 	glBegin(GL_TRIANGLES);
 	
+	int ntris;
+	int a, b, c;
+	
 	if(bUseEyes){
-		int ntris = fullTriangles.size();
-		int a, b, c;
+		int ntris = eyeTriangles.size();
 		
 		for(int i = 0; i < shapes.size(); i++){
 			full_object_detection shape = shapes[i];
@@ -424,9 +408,9 @@ void ofApp::drawSwapped(){
 			}
 			
 			for(int t = 0; t < ntris; t ++){
-				a = fullTriangles[t][0];
-				b = fullTriangles[t][1];
-				c = fullTriangles[t][2];
+				a = eyeTriangles[t][0];
+				b = eyeTriangles[t][1];
+				c = eyeTriangles[t][2];
 				
 				glTexCoord2f(texShape.part(a).x(), texShape.part(a).y() );
 				glVertex2f(shape.part(a).x(), shape.part(a).y() );
@@ -440,43 +424,145 @@ void ofApp::drawSwapped(){
 		}
 		
 		glEnd();
-		glDisable(tex->texData.textureTarget);
-	}else{
-		int ntris = triangles.size();
-		int a, b, c;
-		
-		for(int i = 0; i < shapes.size(); i++){
-			full_object_detection shape = shapes[i];
-			full_object_detection texShape = shapes[(i+1)%shapes.size()];
-			if(shape.num_parts() < 68){
-				continue;
-			}
-			
-			for(int t = 0; t < ntris; t ++){
-				a = triangles[t][0];
-				b = triangles[t][1];
-				c = triangles[t][2];
-				
-				glTexCoord2f(texShape.part(a).x(), texShape.part(a).y() );
-				glVertex2f(shape.part(a).x(), shape.part(a).y() );
-				
-				glTexCoord2f(texShape.part(b).x(), texShape.part(b).y());
-				glVertex2f(shape.part(b).x(), shape.part(b).y());
-				
-				glTexCoord2f(texShape.part(c).x(), texShape.part(c).y() );
-				glVertex2f(shape.part(c).x(), shape.part(c).y() );
-			}
-		}
-		
-		glEnd();
-		glDisable(tex->texData.textureTarget);
 	}
+	
+	if(bUseMouth){
+		int ntris = mouthTriangles.size();
+		
+		for(int i = 0; i < shapes.size(); i++){
+			full_object_detection shape = shapes[i];
+			full_object_detection texShape = shapes[(i+1)%shapes.size()];
+			if(shape.num_parts() < 68){
+				continue;
+			}
+			
+			for(int t = 0; t < ntris; t ++){
+				a = mouthTriangles[t][0];
+				b = mouthTriangles[t][1];
+				c = mouthTriangles[t][2];
+				
+				glTexCoord2f(texShape.part(a).x(), texShape.part(a).y() );
+				glVertex2f(shape.part(a).x(), shape.part(a).y() );
+				
+				glTexCoord2f(texShape.part(b).x(), texShape.part(b).y());
+				glVertex2f(shape.part(b).x(), shape.part(b).y());
+				
+				glTexCoord2f(texShape.part(c).x(), texShape.part(c).y() );
+				glVertex2f(shape.part(c).x(), shape.part(c).y() );
+			}
+		}
+		
+		glEnd();
+	}
+	
+	ntris = triangles.size();
+	
+	for(int i = 0; i < shapes.size(); i++){
+		full_object_detection shape = shapes[i];
+		full_object_detection texShape = shapes[(i+1)%shapes.size()];
+		if(shape.num_parts() < 68){
+			continue;
+		}
+		
+		for(int t = 0; t < ntris; t ++){
+			a = triangles[t][0];
+			b = triangles[t][1];
+			c = triangles[t][2];
+			
+			glTexCoord2f(texShape.part(a).x(), texShape.part(a).y() );
+			glVertex2f(shape.part(a).x(), shape.part(a).y() );
+			
+			glTexCoord2f(texShape.part(b).x(), texShape.part(b).y());
+			glVertex2f(shape.part(b).x(), shape.part(b).y());
+			
+			glTexCoord2f(texShape.part(c).x(), texShape.part(c).y() );
+			glVertex2f(shape.part(c).x(), shape.part(c).y() );
+		}
+	}
+	
+	glEnd();
+	glDisable(tex->texData.textureTarget);
+	
 	
 }
 
 
-//MARK: -
+//MARK: - SETUP
 
+//--------------------------------------------------------------
+void ofApp::setupFaceParts(){
+	std::vector <int> part;
+	faceParts.clear();
+	
+	// JAW
+	for(int j = 0; j < 17; j++){
+		part.push_back(j);
+	}
+	faceParts.push_back(part);
+	part.clear();
+	
+	// Left eyebrow
+	for(int j = 17; j < 22; j++){
+		part.push_back(j);
+	}
+	faceParts.push_back(part);
+	part.clear();
+	
+	// Left Eye
+	for(int j = 36; j < 42; j++){
+		part.push_back(j);
+	}
+	part.push_back(36); // close loop
+	faceParts.push_back(part);
+	part.clear();
+	
+	// Right Eyebrow
+	for(int j = 22; j < 27; j++){
+		part.push_back(j);
+	}
+	faceParts.push_back(part);
+	part.clear();
+	
+	// Right Eye
+	for(int j = 42; j < 48; j++){
+		part.push_back(j);
+	}
+	part.push_back(42); // close loop
+	faceParts.push_back(part);
+	part.clear();
+	
+	// Nose
+	for(int j = 27; j < 31; j++){
+		part.push_back(j);
+	}
+	faceParts.push_back(part);
+	part.clear();
+	
+	for(int j = 31; j < 36; j++){
+		part.push_back(j);
+	}
+	faceParts.push_back(part);
+	part.clear();
+	
+	
+	// Mouth
+	for(int j = 48; j < 60; j++){
+		part.push_back(j);
+	}
+	part.push_back(48); // close loop
+	faceParts.push_back(part);
+	part.clear();
+	
+	
+	// bottom of mouth
+	for(int j = 60; j < 68; j++){
+		part.push_back(j);
+	}
+	part.push_back(60); // close loop
+	faceParts.push_back(part);
+	part.clear();
+	
+}
 //--------------------------------------------------------------
 void ofApp::setupFaceTriangles(){
 	
@@ -620,20 +706,22 @@ void ofApp::setupFaceTriangles(){
 		{ 54, 10, 11},
 		
 	};
-	fullTriangles = triangles;
-	std::vector < std::vector < int > > extraTris;
-	extraTris = {
+	
+	eyeTriangles = {
 		// close left eye
 		{ 37, 36, 41},
 		{ 37, 41, 38},
 		{ 38, 41, 40},
 		{ 38, 40, 39},
+		
 		// close right eye
 		{ 43, 42, 47},
 		{ 43, 47, 44},
 		{ 44, 47, 46},
 		{ 44, 46, 45},
-		
+	};
+	
+	mouthTriangles = {
 		//close mouth
 		{ 61, 60, 67},
 		{ 61, 67, 66},
@@ -642,7 +730,7 @@ void ofApp::setupFaceTriangles(){
 		{ 63, 66, 65},
 		{ 63, 65, 64},
 	};
-	fullTriangles.insert(fullTriangles.end(), extraTris.begin(), extraTris.end());
+
 }
 
 //--------------------------------------------------------------
@@ -736,13 +824,23 @@ bool ofApp::clickPts(ofPoint p){
 	p -= ofPoint(mx, my);
 	p.x /= w;
 	p.y /= h;
-	float r = 0.01;
+	if(fTextureScale != 0){
+		p /= fTextureScale;
+	}
+	float r = 0.02;
+	float minDist = 100000;
 	for(int i = 0; i < texPts.size(); i++){
 		ofPoint * pt = texPts[i];
 		if( p.x > pt->x - r &&  p.x < pt->x + r &&  p.y > pt->y - r &&  p.y < pt->y + r ){
-			selPt = pt;
-			return true;
+			float d = (p - *pt).length();
+			if(d < minDist){
+				selPt = pt;
+				minDist = d;
+			}
 		}
+	}
+	if(selPt != NULL){
+		return true;
 	}
 	return false;
 }
@@ -761,6 +859,9 @@ bool ofApp::drag(ofPoint p){
 		p -= ofPoint(mx, my);
 		p.x /= w;
 		p.y /= h;
+		if(fTextureScale != 0){
+			p /= fTextureScale;
+		}
 		selPt->set(p);
 		return true;
 	}
@@ -770,8 +871,8 @@ bool ofApp::drag(ofPoint p){
 void ofApp::drawFlatFace(){
 	ofTexture  * tex = &(cam.getTexture());
 	
-	float w = faceTexture.getWidth();
-	float h = faceTexture.getHeight();
+	float w =  faceTexture.getWidth();
+	float h =  faceTexture.getHeight();
 	float tx = 0;
 	float ty = 0;
 	
@@ -780,18 +881,68 @@ void ofApp::drawFlatFace(){
 	glBindTexture(tex->texData.textureTarget, (GLuint)tex->texData.textureID );
 	glColor3f(1.0, 1.0, 1.0);
 	glBegin(GL_TRIANGLES);
-	int ntris = fullTriangles.size();
+	int ntris;
 	int a, b, c;
 	
+	ntris = eyeTriangles.size();
 	if( shapes.size() > 0){
 		full_object_detection texShape = shapes[0];
 		
 		if(texShape.num_parts() >= 68){
 			
 			for(int t = 0; t < ntris; t ++){
-				a = fullTriangles[t][0];
-				b = fullTriangles[t][1];
-				c = fullTriangles[t][2];
+				a = eyeTriangles[t][0];
+				b = eyeTriangles[t][1];
+				c = eyeTriangles[t][2];
+				
+				glTexCoord2f(texShape.part(a).x(), texShape.part(a).y() );
+				glVertex2f(tx + w * texPts[a]->x, ty + h * texPts[a]->y);
+				
+				glTexCoord2f(texShape.part(b).x(), texShape.part(b).y());
+				glVertex2f(tx + w * texPts[b]->x, ty + h * texPts[b]->y);
+				
+				glTexCoord2f(texShape.part(c).x(), texShape.part(c).y() );
+				glVertex2f(tx + w * texPts[c]->x, ty + h * texPts[c]->y);
+				
+			}
+		}
+	}
+	
+	ntris = mouthTriangles.size();
+	if( shapes.size() > 0){
+		full_object_detection texShape = shapes[0];
+		
+		if(texShape.num_parts() >= 68){
+			
+			for(int t = 0; t < ntris; t ++){
+				a = mouthTriangles[t][0];
+				b = mouthTriangles[t][1];
+				c = mouthTriangles[t][2];
+				
+				glTexCoord2f(texShape.part(a).x(), texShape.part(a).y() );
+				glVertex2f(tx + w * texPts[a]->x, ty + h * texPts[a]->y);
+				
+				glTexCoord2f(texShape.part(b).x(), texShape.part(b).y());
+				glVertex2f(tx + w * texPts[b]->x, ty + h * texPts[b]->y);
+				
+				glTexCoord2f(texShape.part(c).x(), texShape.part(c).y() );
+				glVertex2f(tx + w * texPts[c]->x, ty + h * texPts[c]->y);
+				
+			}
+		}
+	}
+	
+	
+	ntris = triangles.size();
+	if( shapes.size() > 0){
+		full_object_detection texShape = shapes[0];
+		
+		if(texShape.num_parts() >= 68){
+			
+			for(int t = 0; t < ntris; t ++){
+				a = triangles[t][0];
+				b = triangles[t][1];
+				c = triangles[t][2];
 				
 				glTexCoord2f(texShape.part(a).x(), texShape.part(a).y() );
 				glVertex2f(tx + w * texPts[a]->x, ty + h * texPts[a]->y);
@@ -818,87 +969,126 @@ void ofApp::drawFlatFace(){
 //--------------------------------------------------------------
 void ofApp::drawTexturePoints(){
 	// draw texture image
-	float w = faceTexture.getWidth();
+	float w =  faceTexture.getWidth();
 	float h = faceTexture.getHeight();
 	
 	ofPushMatrix();
 	ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
-	if(bDrawCamera){
-		drawFlatFace();
-	}else{
-		ofSetColor(255,255,255);
-		faceTexture.draw(-w/2, -h/2);
-	}
-	
-	// draw triangles
-	ofNoFill();
-	int ntris = fullTriangles.size();
-	int a, b, c;
-	ofPoint ca, cb, cc; // colors
-	std::vector < ofPoint > colors = {
-		ofPoint(1, 0, 0),
-		ofPoint(1, 0.5, 0),
-		ofPoint(1, 1, 0),
-		ofPoint(0.5, 1, 0),
-		ofPoint(0, 1, 0),
-		ofPoint(0, 1, 0.5),
-		ofPoint(0, 1, 1),
-		ofPoint(0, 0.5, 1),
-		ofPoint(0, 0, 1),
-		ofPoint(0.5, 0, 1),
-		ofPoint(1, 0, 1),
-		ofPoint(1, 0, 0.5),
-	};
-	
-	ofPushMatrix();
-	ofScale(w, h);
-	ofSetColor(255,0,0);
-	if(texPts.size() >= 68){
-		glBegin(GL_TRIANGLES);
-		for(int t = 0; t < ntris; t ++){
-			a = fullTriangles[t][0];
-			b = fullTriangles[t][1];
-			c = fullTriangles[t][2];
-			ca = colors[a % colors.size()];
-			cb = colors[b % colors.size()];
-			cc = colors[c % colors.size()];
+	{
+		ofPushMatrix();
+		{
+			ofScale(fTextureScale, fTextureScale);
 			
-			//glColor3f(ca.x, ca.y, ca.z);
-			glVertex2f(texPts[a]->x, texPts[a]->y );
-			//glColor3f(cb.x, cb.y, cb.z);
-			glVertex2f(texPts[b]->x, texPts[b]->y );
-			//glColor3f(cc.x, cc.y, cc.z);
-			glVertex2f(texPts[c]->x, texPts[c]->y );
+			if(bDrawCamera){
+				drawFlatFace();
+			}else{
+				ofSetColor(255,255,255);
+				faceTexture.draw(-w/2, -h/2);
+			}
 			
+			// DRAW TRIANGLES
+			ofNoFill();
+			int ntris;
+			int a, b, c;
+			ofPoint ca, cb, cc; // colors
+			std::vector < ofPoint > colors = {
+				ofPoint(1, 0, 0),
+				ofPoint(1, 0.5, 0),
+				ofPoint(1, 1, 0),
+				ofPoint(0.5, 1, 0),
+				ofPoint(0, 1, 0),
+				ofPoint(0, 1, 0.5),
+				ofPoint(0, 1, 1),
+				ofPoint(0, 0.5, 1),
+				ofPoint(0, 0, 1),
+				ofPoint(0.5, 0, 1),
+				ofPoint(1, 0, 1),
+				ofPoint(1, 0, 0.5),
+			};
+			
+			ofPushMatrix();
+			{
+				ofScale(w, h);
+				ofSetColor(0,255,0);
+				
+				ntris = triangles.size();
+				if(texPts.size() >= 68){
+					glBegin(GL_TRIANGLES);
+					for(int t = 0; t < ntris; t ++){
+						a = triangles[t][0];
+						b = triangles[t][1];
+						c = triangles[t][2];
+						//ca = colors[a % colors.size()];
+						//cb = colors[b % colors.size()];
+						//cc = colors[c % colors.size()];
+						
+						//glColor3f(ca.x, ca.y, ca.z);
+						glVertex2f(texPts[a]->x, texPts[a]->y );
+						//glColor3f(cb.x, cb.y, cb.z);
+						glVertex2f(texPts[b]->x, texPts[b]->y );
+						//glColor3f(cc.x, cc.y, cc.z);
+						glVertex2f(texPts[c]->x, texPts[c]->y );
+						
+						
+					}
+					glEnd();
+					
+					// LINES
+					ofSetColor(255);
+					ofSetLineWidth(3);
+					for(int p = 0; p < faceParts.size(); p++){
+						glBegin(GL_LINE_STRIP);
+						for(int i= 0; i < faceParts[p].size(); i++){
+							a = faceParts[p][i];
+							glVertex2f(texPts[a]->x, texPts[a]->y );
+						}
+						glEnd();
+					}
+					
+					ofSetColor(255,0,0);
+					ofSetLineWidth(1);
+					for(int p = 0; p < faceParts.size(); p++){
+						glBegin(GL_LINE_STRIP);
+						for(int i= 0; i < faceParts[p].size(); i++){
+							a = faceParts[p][i];
+							glVertex2f(texPts[a]->x, texPts[a]->y );
+						}
+						glEnd();
+					}
+					
+				}
+				
+			}
+			ofPopMatrix();
 			
 		}
-		glEnd();
-	}
-	ofPopMatrix();
-	
-	// draw points
-	
-	ofSetColor(255);
-	ofFill();
-	for(int i = 0; i < texPts.size(); i++){
-		ofDrawEllipse( w * texPts[i]->x, h * texPts[i]->y, 7, 7);
-	}
-	ofSetColor(0);
-	ofFill();
-	for(int i = 0; i < texPts.size(); i++){
-		ofDrawEllipse( w * texPts[i]->x, h * texPts[i]->y, 5, 5);
-		ofDrawBitmapString(ofToString(i), w * texPts[i]->x + 5,  h * texPts[i]->y + 5);
+		ofPopMatrix();
 		
-	}
-	
-	if(selPt != NULL){
+		
+		// DRAW POINTS
 		ofSetColor(255);
-		ofDrawEllipse( w * selPt->x, h * selPt->y, 9, 9);
+		w *= fTextureScale;
+		h *= fTextureScale;
+		ofFill();
+		for(int i = 0; i < texPts.size(); i++){
+			ofDrawEllipse( w * texPts[i]->x, h * texPts[i]->y, 7, 7);
+		}
+		ofSetColor(0);
+		ofFill();
+		for(int i = 0; i < texPts.size(); i++){
+			ofDrawEllipse( w * texPts[i]->x, h * texPts[i]->y, 5, 5);
+			ofDrawBitmapString(ofToString(i), w * texPts[i]->x + 5,  h * texPts[i]->y + 5);
+			
+		}
 		
-		ofSetColor(255,0,0);
-		ofDrawEllipse( w * selPt->x, h * selPt->y, 7, 7);
+		if(selPt != NULL){
+			ofSetColor(255);
+			ofDrawEllipse( w * selPt->x, h * selPt->y, 9, 9);
+			
+			ofSetColor(255,0,0);
+			ofDrawEllipse( w * selPt->x, h * selPt->y, 7, 7);
+		}
 	}
-	
 	ofPopMatrix();
 }
 
@@ -1027,6 +1217,7 @@ void ofApp::setupButtons() {
 	buttons.addSelectionItem("Edit Points", EDIT_POINTS, drawState);
 	buttons.addToggleItem("Show Camera [C]", bDrawCamera);
 	buttons.addToggleItem("Use Eyes [e]", bUseEyes);
+	buttons.addToggleItem("Use Mouth [m]", bUseMouth);
 	
 	buttons.addButtonPanel("Tools");
 	buttons.addListItem("Press [SPACE] to save the Photo");
@@ -1052,13 +1243,26 @@ void ofApp::keyPressed (int key) {
 			break;
 		case 'e':
 			bUseEyes = !bUseEyes;
-			//exportFacePoints();
+			break;
+		case 'E':
+			exportFacePoints();
+			break;
+		case 'm':
+			bUseMouth = !bUseMouth;
 			break;
 		case 'p':
 			exportTexturePoints();
 			break;
 		case 'c':
 			bDrawCamera = !bDrawCamera;
+			break;
+		case 'a':
+			if(drawState == DRAW_TEXTURED){
+				drawState = EDIT_POINTS;
+			}else{
+				drawState = DRAW_TEXTURED;
+			}
+			break;
 	}
 }
 
