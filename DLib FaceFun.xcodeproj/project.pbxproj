@@ -15,8 +15,6 @@
 		223BC5EF1C105F2E0020725C /* SliderItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5CD1C105F2E0020725C /* SliderItem.cpp */; };
 		223BC5F01C105F2E0020725C /* ToggleItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5CF1C105F2E0020725C /* ToggleItem.cpp */; };
 		223BC5F11C105F2E0020725C /* SimpleButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5D41C105F2E0020725C /* SimpleButton.cpp */; };
-		223BC5F31C105F2E0020725C /* ofxUVC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5DB1C105F2E0020725C /* ofxUVC.mm */; };
-		223BC5F41C105F2E0020725C /* UVCCameraControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5DD1C105F2E0020725C /* UVCCameraControl.m */; };
 		223BC5F51C105F2E0020725C /* tinyxml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5E01C105F2E0020725C /* tinyxml.cpp */; };
 		223BC5F61C105F2E0020725C /* tinyxmlerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5E21C105F2E0020725C /* tinyxmlerror.cpp */; };
 		223BC5F71C105F2E0020725C /* tinyxmlparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 223BC5E31C105F2E0020725C /* tinyxmlparser.cpp */; };
@@ -75,10 +73,6 @@
 		223BC5D31C105F2E0020725C /* ofxButtons.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxButtons.h; sourceTree = "<group>"; };
 		223BC5D41C105F2E0020725C /* SimpleButton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimpleButton.cpp; sourceTree = "<group>"; };
 		223BC5D51C105F2E0020725C /* SimpleButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimpleButton.h; sourceTree = "<group>"; };
-		223BC5DA1C105F2E0020725C /* ofxUVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxUVC.h; sourceTree = "<group>"; };
-		223BC5DB1C105F2E0020725C /* ofxUVC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ofxUVC.mm; sourceTree = "<group>"; };
-		223BC5DC1C105F2E0020725C /* UVCCameraControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UVCCameraControl.h; sourceTree = "<group>"; };
-		223BC5DD1C105F2E0020725C /* UVCCameraControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UVCCameraControl.m; sourceTree = "<group>"; };
 		223BC5E01C105F2E0020725C /* tinyxml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxml.cpp; sourceTree = "<group>"; };
 		223BC5E11C105F2E0020725C /* tinyxml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyxml.h; sourceTree = "<group>"; };
 		223BC5E21C105F2E0020725C /* tinyxmlerror.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxmlerror.cpp; sourceTree = "<group>"; };
@@ -167,26 +161,6 @@
 			path = Message;
 			sourceTree = "<group>";
 		};
-		223BC5D61C105F2E0020725C /* ofxUVC */ = {
-			isa = PBXGroup;
-			children = (
-				223BC5D91C105F2E0020725C /* src */,
-			);
-			name = ofxUVC;
-			path = ../../../addons/ofxUVC;
-			sourceTree = "<group>";
-		};
-		223BC5D91C105F2E0020725C /* src */ = {
-			isa = PBXGroup;
-			children = (
-				223BC5DA1C105F2E0020725C /* ofxUVC.h */,
-				223BC5DB1C105F2E0020725C /* ofxUVC.mm */,
-				223BC5DC1C105F2E0020725C /* UVCCameraControl.h */,
-				223BC5DD1C105F2E0020725C /* UVCCameraControl.m */,
-			);
-			path = src;
-			sourceTree = "<group>";
-		};
 		223BC5DE1C105F2E0020725C /* ofxXmlSettings */ = {
 			isa = PBXGroup;
 			children = (
@@ -245,7 +219,6 @@
 			isa = PBXGroup;
 			children = (
 				223BC5AD1C105F2E0020725C /* ofxButtons */,
-				223BC5D61C105F2E0020725C /* ofxUVC */,
 				223BC5DE1C105F2E0020725C /* ofxXmlSettings */,
 				22D15AA71C0DB700007FA746 /* ofxDLib */,
 			);
@@ -386,10 +359,8 @@
 				223BC5F81C105F2E0020725C /* ofxXmlSettings.cpp in Sources */,
 				223BC5EB1C105F2E0020725C /* ButtonPanel.cpp in Sources */,
 				223BC5F71C105F2E0020725C /* tinyxmlparser.cpp in Sources */,
-				223BC5F31C105F2E0020725C /* ofxUVC.mm in Sources */,
 				223BC5F51C105F2E0020725C /* tinyxml.cpp in Sources */,
 				223BC5EC1C105F2E0020725C /* FlashItem.cpp in Sources */,
-				223BC5F41C105F2E0020725C /* UVCCameraControl.m in Sources */,
 				223BC5F01C105F2E0020725C /* ToggleItem.cpp in Sources */,
 				22F5AC021C1F4812000D0D8D /* source.cpp in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,

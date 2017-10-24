@@ -9,6 +9,7 @@ void ofApp::setup() {
 	ofBackground(255);
 	setupCamera(cam);
 	bDrawCamera = true;
+	bSaveFrame = false;
 	
 	fps = 0;
 	
@@ -29,7 +30,6 @@ void ofApp::setup() {
 	deserialize(ofToDataPath("shape_predictor_68_face_landmarks.dat")) >> sp;
 	
 	drawState = DRAW_POINTS;
-	setupUVC();
 
 	setupButtons();
 	
@@ -37,7 +37,6 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
-	updateButtons();
 	
 	cam.update();
 	if(cam.isFrameNew() && bUseDLib) {
@@ -147,10 +146,25 @@ void ofApp::draw() {
 				
 			}
 			ofPopMatrix();
-			ofSetLineWidth(1);
-			ofDrawBitmapStringHighlight(ofToString(fps, 0)+"fps", 10, 40);
 		}
 		ofPopMatrix();
+		
+	}
+	if(bSaveFrame){
+		ofImage img;
+		img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+		string fileName =
+		ofToString(ofGetYear()) + "_" +
+		ofToString(ofGetMonth(), 2, '0') + "_" +
+		ofToString(ofGetDay(), 2, '0') + "-" +
+		ofToString(ofGetHours(),2,'0') + "_" +
+		ofToString(ofGetMinutes(), 2, '0')  + "_" +
+		ofToString(ofGetSeconds(), 2, '0');
+		img.save("photos/" + fileName + ".jpg");
+		bSaveFrame = false;
+	}else if(buttons.isVisible()){
+		ofSetLineWidth(1);
+		ofDrawBitmapStringHighlight(ofToString(fps, 0)+"fps", 10, 40);
 	}
 }
 
@@ -862,11 +876,9 @@ void ofApp::exportTexturePoints(){
 }
 
 
-#pragma mark - UVC
 
 //--------------------------------------------------------------
 void ofApp::setupCamera(ofVideoGrabber &vidGrabber){
-	bool bHasUVCCam = false;
 	
 	std::vector <ofVideoDevice> cams =  vidGrabber.listDevices();
 	cout << endl << cams.size() << " Video Devices: " << endl;
@@ -874,7 +886,6 @@ void ofApp::setupCamera(ofVideoGrabber &vidGrabber){
 	for(int i = 0; i < cams.size(); i++){
 		if(cams[i].deviceName.find("C920") != string::npos){
 			selDevice = i;
-			bHasUVCCam = true;
 			cout << " * ";
 		}else{
 			cout << "   " ;
@@ -908,46 +919,12 @@ void ofApp::setupCamera(ofVideoGrabber &vidGrabber){
 	cout << "Started camera with dimensions " << w << " x " << h << endl;
 }
 
-//----------------------------------------------------------------------
-void ofApp::setupUVC(){
-	/*
-		name: Logitech c920
-		vendorId : 0x046d
-		productId: 0x082d
-		interfaceNum: 0x00
-		# 1280x720 (this is 1/2 res)
-		width: 1280
-		height: 720
-	 */
-	cameraName = "Logitech c920";
-	int vendorId = 0x046d;
-	int productId = 0x082d;
-	int interfaceNum = 0x00;
-	
-	bLEDisOn = true;
-	fps = 1;
-	focus = 0.00;
-	exposure = 0.95;
-	bAutoExposure = true;
-	bAutoFocus = false;
-	
-	uvcControl.useCamera(vendorId, productId, interfaceNum);
-	/*
-	 uvcControl.setAutoExposure(bAutoFocus);
-	 uvcControl.setAutoFocus(bAutoExposure);
-	 uvcControl.setAbsoluteFocus(focus);
-	 uvcControl.setExposure(exposure);
-	 */
-	uvcControl.getCameraControls();
-}
-
 
 #pragma mark - BUTTONS
 
 //----------------------------------------------------------------------
 void ofApp::setupButtons() {
 	
-	bUpdateUVC = false;
 	
 	buttons.setup();
 	
@@ -955,14 +932,6 @@ void ofApp::setupButtons() {
 	buttons.addToggleItem("Use DLib [D]", bUseDLib);
 	buttons.addSliderItem("FPS", 0, 200, fps);
 	buttons.addToggleItem("Scale up", bScaleUp);
-	
-	buttons.addButtonPanel("UVC Camera");
-	buttons.addToggleItem("AutoFocus", bAutoFocus);
-	buttons.addSliderItem("Focus", 0, 1, focus);
-	buttons.addToggleItem("AutoExposure", bAutoExposure);
-	buttons.addSliderItem("Exposure", 0, 1, exposure);
-	buttons.addToggleItem("LED", bLEDisOn);
-	buttons.addFlashItem("Update Camera", bUpdateUVC);
 	
 	buttons.addButtonPanel("Drawing");
 	buttons.addSelectionItem("Points", DRAW_POINTS, drawState);
@@ -974,27 +943,21 @@ void ofApp::setupButtons() {
 	buttons.addSelectionItem("Edit Points", EDIT_POINTS, drawState);
 	buttons.addToggleItem("Show Camera [C]", bDrawCamera);
 	
+	buttons.addButtonPanel("Photo");
+	buttons.addListItem("Press [SPACE] to save the Photo");
+	
 	buttons.loadSettings();
 }
 
-
-//----------------------------------------------------------------------
-void ofApp::updateButtons() {
-	if(bUpdateUVC || ofGetFrameNum() % 30 == 0){
-		uvcControl.setAutoExposure(bAutoExposure);
-		uvcControl.setAutoFocus(bAutoFocus);
-		uvcControl.setExposure(exposure);
-		uvcControl.setAbsoluteFocus(focus);
-		
-	}
-	
-}
 
 #pragma mark - EVENTS
 
 //--------------------------------------------------------------
 void ofApp::keyPressed (int key) {
 	switch (key) {
+		case ' ':
+			bSaveFrame = true;
+			break;
 		case 's':
 			buttons.saveSettings();
 			break;
@@ -1009,9 +972,6 @@ void ofApp::keyPressed (int key) {
 			break;
 		case 'c':
 			bDrawCamera = !bDrawCamera;
-		case 'l':
-			uvcControl.setLED(bLEDisOn);
-			break;
 	}
 }
 
@@ -1034,6 +994,16 @@ void ofApp::mouseReleased(int x, int y, int button){
 	}
 }
 
+//--------------------------------------------------------------
+void ofApp::dragEvent(ofDragInfo dragInfo){
+	cout << "Dropping image file! " << endl;
+	for(int i = 0; i < dragInfo.files.size(); i++){
+		string fileName = dragInfo.files[i];
+		cout << "Loading new textur : " << fileName << endl;
+		faceTexture.load(fileName);
+		return; // only use first file!
+	}
+}
 
 
 #pragma mark - HELPERS
@@ -1133,114 +1103,3 @@ void ofApp::DLibImageToImg( array2d<unsigned char> &srcImg, ofImage &destImg){
 	 */
 }
 
-
-
-// The contents of this file are in the public domain. See LICENSE_FOR_EXAMPLE_PROGRAMS.txt
-/*
- 
- This example program shows how to find frontal human faces in an image.  In
- particular, this program shows how you can take a list of images from the
- command line and display each on the screen with red boxes overlaid on each
- human face.
- 
- The examples/faces folder contains some jpg images of people.  You can run
- this program on them and see the detections by executing the following command:
- ./face_detection_ex faces/*.jpg
- 
- 
- This face detector is made using the now classic Histogram of Oriented
- Gradients (HOG) feature combined with a linear classifier, an image pyramid,
- and sliding window detection scheme.  This type of object detector is fairly
- general and capable of detecting many types of semi-rigid objects in
- addition to human faces.  Therefore, if you are interested in making your
- own object detectors then read the fhog_object_detector_ex.cpp example
- program.  It shows how to use the machine learning tools which were used to
- create dlib's face detector.
- 
- 
- Finally, note that the face detector is fastest when compiled with at least
- SSE2 instructions enabled.  So if you are using a PC with an Intel or AMD
- chip then you should enable at least SSE2 instructions.  If you are using
- cmake to compile this program you can enable them by using one of the
- following commands when you create the build project:
- cmake path_to_dlib_root/examples -DUSE_SSE2_INSTRUCTIONS=ON
- cmake path_to_dlib_root/examples -DUSE_SSE4_INSTRUCTIONS=ON
- cmake path_to_dlib_root/examples -DUSE_AVX_INSTRUCTIONS=ON
- This will set the appropriate compiler options for GCC, clang, Visual
- Studio, or the Intel compiler.  If you are using another compiler then you
- need to consult your compiler's manual to determine how to enable these
- instructions.  Note that AVX is the fastest but requires a CPU from at least
- 2011.  SSE4 is the next fastest and is supported by most current machines.
- */
-
-
-/****************************************
- 
-	THE EXAMPLE
- 
- #include <dlib/image_processing/frontal_face_detector.h>
- #include <dlib/gui_widgets.h>
- #include <dlib/image_io.h>
- #include <iostream>
- 
- using namespace dlib;
- using namespace std;
- 
- // ----------------------------------------------------------------------------------------
- 
- int main(int argc, char** argv)
- {
-	try
-	{
- if (argc == 1)
- {
- cout << "Give some image files as arguments to this program." << endl;
- return 0;
- }
- 
- frontal_face_detector detector = get_frontal_face_detector();
- image_window win;
- 
- // Loop over all the images provided on the command line.
- for (int i = 1; i < argc; ++i)
- {
- cout << "processing image " << argv[i] << endl;
- array2d<unsigned char> img;
- load_image(img, argv[i]);
- // Make the image bigger by a factor of two.  This is useful since
- // the face detector looks for faces that are about 80 by 80 pixels
- // or larger.  Therefore, if you want to find faces that are smaller
- // than that then you need to upsample the image as we do here by
- // calling pyramid_up().  So this will allow it to detect faces that
- // are at least 40 by 40 pixels in size.  We could call pyramid_up()
- // again to find even smaller faces, but note that every time we
- // upsample the image we make the detector run slower since it must
- // process a larger image.
- pyramid_up(img);
- 
- // Now tell the face detector to give us a list of bounding boxes
- // around all the faces it can find in the image.
- std::vector<rectangle> dets = detector(img);
- 
- cout << "Number of faces detected: " << dets.size() << endl;
- // Now we show the image on the screen and the face detections as
- // red overlay boxes.
- win.clear_overlay();
- win.set_image(img);
- win.add_overlay(dets, rgb_pixel(255,0,0));
- 
- cout << "Hit enter to process the next image..." << endl;
- cin.get();
- }
-	}
-	catch (exception& e)
-	{
- cout << "\nexception thrown!" << endl;
- cout << e.what() << endl;
-	}
- }
- 
- // ----------------------------------------------------------------------------------------
- 
- 
- *****************************************/

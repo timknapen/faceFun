@@ -2,11 +2,10 @@
 
 #include "ofMain.h"
 #include "ofxButtons.h"
-// UVC
-#include "ofxUVC.h"
-
+// DLIB
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/image_processing.h>
+
 
 using namespace dlib;
 using namespace std;
@@ -30,6 +29,7 @@ public:
 	void mouseDragged(int x, int y, int button);
 	void mousePressed(int x, int y, int button);
 	void mouseReleased(int x, int y, int button);
+	void dragEvent(ofDragInfo dragInfo);
 	
 	float fps;
 	ofVideoGrabber cam;
@@ -52,17 +52,7 @@ public:
 
 	//MARK: -  UVC control
 	void setupCamera( ofVideoGrabber &vidGrabber);
-	void setupUVC();
 	bool bLEDisOn;
-
-	ofxUVC uvcControl;
-	string cameraName;
-	float focus;
-	float exposure;
-	bool bAutoFocus;
-	bool bAutoExposure;
-	bool bUpdateUVC;
-	
 	
 	//MARK: - Drawing
 	int drawState;
@@ -91,6 +81,7 @@ public:
 	// BUTTONS
 	ButtonManager buttons;
 	void setupButtons();
-	void updateButtons();
+	
+	bool bSaveFrame;
 	
 };
