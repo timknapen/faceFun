@@ -12,6 +12,7 @@ void ofApp::setup() {
 	bSaveFrame = false;
 	
 	fps = 0;
+	photoBoothCounter = 0;
 	
 	setupFaceParts();
 	setupFaceTriangles();
@@ -20,7 +21,7 @@ void ofApp::setup() {
 	fTextureScale = 1;
 	
 	bUseEyes = bUseMouth = false;
-	
+	bCameraBackground = true;
 	selPt = NULL;
 	
 	// DLIB
@@ -101,6 +102,10 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
+	photoBoothCounter--;
+	if(photoBoothCounter == 0){
+		bSaveFrame = true;
+	}
 	if(bSaveFrame){
 		float w = ofGetWidth();
 		float h = ofGetHeight();
@@ -126,7 +131,7 @@ void ofApp::draw() {
 				ofTranslate(-cam.getWidth()/2, -cam.getHeight()/2);
 			}
 			
-			if(bDrawCamera){
+			if(bCameraBackground){
 				cam.draw(0, 0);
 			}
 			
@@ -197,6 +202,12 @@ void ofApp::draw() {
 		ofSetLineWidth(1);
 		ofDrawBitmapStringHighlight(ofToString(fps, 0)+"fps", 10, 40);
 	}
+	if(photoBoothCounter > 0 && photoBoothCounter % 30 < 15){
+		ofSetColor(255,0, 0);
+		ofFill();
+		float r = 20 + 2 *  photoBoothCounter % 30;
+		ofDrawEllipse( ofGetWidth() - 100, ofGetHeight() - 100, r, r);
+	}
 }
 
 //--------------------------------------------------------------
@@ -231,7 +242,7 @@ void ofApp::drawFacePoints(){
 //--------------------------------------------------------------
 void ofApp::drawTriangles(){
 	
-	int ntris = triangles.size();
+	int ntris;
 	int a, b, c;
 	ofPoint ca, cb, cc; // colors
 	std::vector < ofPoint > colors = {
@@ -248,8 +259,67 @@ void ofApp::drawTriangles(){
 		ofPoint(1, 0, 1),
 		ofPoint(1, 0, 0.5),
 	};
-	
 	glBegin(GL_TRIANGLES);
+
+	if(bUseEyes){
+		ntris = eyeTriangles.size();
+		for(int i = 0; i < shapes.size(); i++){
+			full_object_detection shape = shapes[i];
+			if(shape.num_parts() < 68){
+				continue;
+			}
+			
+			for(int t = 0; t < ntris; t ++){
+				a = eyeTriangles[t][0];
+				b = eyeTriangles[t][1];
+				c = eyeTriangles[t][2];
+				ca = colors[a % colors.size()];
+				cb = colors[b % colors.size()];
+				cc = colors[c % colors.size()];
+				
+				glColor3f(ca.x, ca.y, ca.z);
+				glVertex2f(shape.part(a).x(), shape.part(a).y() );
+				glColor3f(cb.x, cb.y, cb.z);
+				glVertex2f(shape.part(b).x(), shape.part(b).y() );
+				glColor3f(cc.x, cc.y, cc.z);
+				glVertex2f(shape.part(c).x(), shape.part(c).y() );
+				
+				
+			}
+			
+		}
+	}
+	
+	if(bUseMouth){
+		ntris = mouthTriangles.size();
+		for(int i = 0; i < shapes.size(); i++){
+			full_object_detection shape = shapes[i];
+			if(shape.num_parts() < 68){
+				continue;
+			}
+			
+			for(int t = 0; t < ntris; t ++){
+				a = mouthTriangles[t][0];
+				b = mouthTriangles[t][1];
+				c = mouthTriangles[t][2];
+				ca = colors[a % colors.size()];
+				cb = colors[b % colors.size()];
+				cc = colors[c % colors.size()];
+				
+				glColor3f(ca.x, ca.y, ca.z);
+				glVertex2f(shape.part(a).x(), shape.part(a).y() );
+				glColor3f(cb.x, cb.y, cb.z);
+				glVertex2f(shape.part(b).x(), shape.part(b).y() );
+				glColor3f(cc.x, cc.y, cc.z);
+				glVertex2f(shape.part(c).x(), shape.part(c).y() );
+				
+				
+			}
+			
+		}
+	}
+	
+	ntris = triangles.size();
 	for(int i = 0; i < shapes.size(); i++){
 		full_object_detection shape = shapes[i];
 		if(shape.num_parts() < 68){
@@ -423,7 +493,6 @@ void ofApp::drawSwapped(){
 			}
 		}
 		
-		glEnd();
 	}
 	
 	if(bUseMouth){
@@ -452,7 +521,6 @@ void ofApp::drawSwapped(){
 			}
 		}
 		
-		glEnd();
 	}
 	
 	ntris = triangles.size();
@@ -806,6 +874,8 @@ void ofApp::setupFaceTexturePoints(){
 	 new ofPoint(0.0000, 0.2480 ), // 66
 	 new ofPoint(-0.0620, 0.2480 ), // 67
  };
+	
+	loadTexturePoints("facepoints.txt");
 }
 
 //MARK: - EDIT TEXTURE
@@ -1148,6 +1218,79 @@ void ofApp::exportTexturePoints(){
 	cout << "FACE POINTS : " << endl << output << endl;
 }
 
+//--------------------------------------------------------------
+void ofApp::saveTexturePoints(string fileName){
+	// save our texture points
+	string output = "";
+	
+	output += "";
+	for(int i = 0; i < texPts.size(); i++){
+		output += "\n" + ofToString(texPts[i]->x, 4) +", " +
+		ofToString(texPts[i]->y, 4);
+	}
+	output += "\n";
+	
+	ofBuffer buffer(output);
+	// string fileName = " Face Points.txt";
+	// + ofToString(ofGetYear()) + "_" +
+	//ofToString(ofGetMonth(), 2, '0') + "_" +
+	//ofToString(ofGetDay(), 2, '0') + "-" +
+	//ofToString(ofGetHours(),2,'0') + "_" +
+	//ofToString(ofGetMinutes(), 2, '0')  + "_" +
+	//ofToString(ofGetSeconds(), 2, '0') + ".txt";
+	
+	if(ofBufferToFile(fileName, buffer)){
+		cout << "wrote file to " << fileName << endl;
+	}
+	
+}
+
+//--------------------------------------------------------------
+void ofApp::loadTexturePoints(string filePath){
+	// parse a list of 2D points every line is a new coordinate
+	cout << "Loading points from " << filePath << endl;
+	
+	string data =  ofBufferFromFile(filePath, ofFile::ReadOnly).getText();
+	std::vector<string> lines = ofSplitString(data, "\n");
+	
+	int counter = 0;
+	for(int i = 0; i < lines.size(); i++){
+		// remove leading spaces
+		string line = lines[i];
+		line = ofTrim(line);
+
+		if(line.length() == 0){
+			continue; // skip empty lines
+		}
+		if(line.at(0) == '#'){ // this is a comment
+			//cout << "Comment: " << line << endl;
+			continue;
+		}
+		
+		std::vector<string> tokens = ofSplitString(line, ",");
+		// remove empty tokens
+		for(int i = tokens.size()-1; i >= 0; i --){
+			if(ofTrim(tokens[i]).length() == 0){
+				tokens.erase(tokens.begin() + i );
+			}
+		}
+		if(tokens.size() != 2){
+			cout << "Bad line, wrong amount of tokens (" << tokens.size() << ") : " << line << endl;
+			continue;
+		}
+		// we are here this should be a 2 D coordinate
+		float val1 = atof(tokens[0].c_str());
+		float val2 = atof(tokens[1].c_str());
+		
+		if(counter < texPts.size()){
+			texPts[counter]->set(val1, val2);
+			counter ++;
+		}else{
+			cout << "counter is out of range!! " << counter << endl;
+		}
+	}
+}
+
 
 
 //--------------------------------------------------------------
@@ -1208,12 +1351,12 @@ void ofApp::setupButtons() {
 	buttons.addToggleItem("Scale up", bScaleUp);
 	
 	buttons.addButtonPanel("Drawing");
+	buttons.addToggleItem("Camera in background", bCameraBackground);
 	buttons.addSelectionItem("Points", DRAW_POINTS, drawState);
 	buttons.addSelectionItem("Connections", DRAW_CONNECTIONS, drawState);
 	buttons.addSelectionItem("Triangles", DRAW_TRIANGLES, drawState);
 	buttons.addSelectionItem("Texture", DRAW_TEXTURED, drawState);
 	buttons.addSelectionItem("Swap", DRAW_SWAP, drawState);
-	
 	buttons.addSelectionItem("Edit Points", EDIT_POINTS, drawState);
 	buttons.addToggleItem("Show Camera [C]", bDrawCamera);
 	buttons.addToggleItem("Use Eyes [e]", bUseEyes);
@@ -1233,10 +1376,12 @@ void ofApp::setupButtons() {
 void ofApp::keyPressed (int key) {
 	switch (key) {
 		case ' ':
-			bSaveFrame = true;
+			//bSaveFrame = true;
+			photoBoothCounter = 90; // 3 flashes
 			break;
 		case 's':
 			buttons.saveSettings();
+			saveTexturePoints("facepoints.txt");
 			break;
 		case 'd':
 			bUseDLib = !bUseDLib;
@@ -1251,10 +1396,19 @@ void ofApp::keyPressed (int key) {
 			bUseMouth = !bUseMouth;
 			break;
 		case 'p':
-			exportTexturePoints();
+			saveTexturePoints("facepoints.txt");
+			break;
+		case 'b':
+			bCameraBackground = !bCameraBackground;
 			break;
 		case 'c':
 			bDrawCamera = !bDrawCamera;
+			break;
+		case OF_KEY_RIGHT:
+			drawState ++;
+			if(drawState > 5){
+				drawState = 0;
+			}
 			break;
 		case 'a':
 			if(drawState == DRAW_TEXTURED){
@@ -1287,11 +1441,22 @@ void ofApp::mouseReleased(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){
-	cout << "Dropping image file! " << endl;
+	cout << "Dropping files! " << endl;
 	for(int i = 0; i < dragInfo.files.size(); i++){
 		string fileName = dragInfo.files[i];
-		cout << "Loading new texture : " << fileName << endl;
-		faceTexture.load(fileName);
+		
+		// check extension!
+		cout << "Loading new file : " << fileName;
+		int jpg = fileName.length() - fileName.rfind(".jpg");
+		int txt = fileName.length() - fileName.rfind(".txt");
+		int png = fileName.length() - fileName.rfind(".png");
+		cout << " jpg: " << jpg << " png: " << png << " txt: " << txt << endl;
+		
+		if( jpg == 4 || png == 4 ){
+			faceTexture.load(fileName);
+		}else if(txt == 4){
+			loadTexturePoints(fileName);
+		}
 		return; // only use first file!
 	}
 }

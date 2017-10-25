@@ -4,3 +4,4 @@ bin/data/*.dat
 bin/data/*.png
 bin/data/photos
 *.zip
+bin/data/*.txt

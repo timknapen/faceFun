@@ -34,6 +34,7 @@ public:
 	float fps;
 	ofVideoGrabber cam;
 	bool bDrawCamera;
+	bool bCameraBackground;
 	
 	//MARK: -  DLIB Face Detection
 	bool bUseDLib;
@@ -74,6 +75,8 @@ public:
 	void drawFlatFace();
 	void exportFacePoints();
 	void exportTexturePoints();
+	void saveTexturePoints(string filePath);
+	void loadTexturePoints(string filePath);
 		
 	// editing
 	ofPoint * selPt;
@@ -91,4 +94,6 @@ public:
 	
 	//
 	float fTextureScale;
+	
+	int photoBoothCounter;
 };
