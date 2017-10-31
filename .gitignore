@@ -5,3 +5,4 @@ bin/data/*.png
 bin/data/photos
 *.zip
 bin/data/*.txt
+bin/*.png

@@ -25,7 +25,7 @@ void ofApp::setup() {
 	selPt = NULL;
 	
 	// DLIB
-	// deserialize(ofToDataPath("standard_face_detector.svm")) >> detector;
+	// deserialize(ofToDataPath("face_detector.svm")) >> detector;
 	//cout << "Loaded detector " << detector.
 	detector = get_frontal_face_detector();
 	bScaleUp = false;
